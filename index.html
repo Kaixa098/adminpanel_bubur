@@ -108,6 +108,66 @@
             max-width: 800px; width: 100%; margin: 0 auto;
         }
 
+        /* --- SEARCH BAR --- */
+        .search-container {
+            margin-bottom: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: var(--bg-body); /* Match body bg for smooth scrolling */
+            padding-bottom: 5px;
+        }
+        .admin-search-input {
+            width: 100%;
+            padding: 14px 20px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 1rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            background: white;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+        }
+        .admin-search-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(211, 84, 0, 0.15);
+            outline: none;
+        }
+        .search-icon {
+            position: absolute;
+            left: 15px; /* Adjusted logic to fit inside or use placeholder */
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9CA3AF;
+        }
+        /* Simple version with icon via placeholder or flex wrapper */
+        .search-wrapper {
+            display: flex;
+            align-items: center;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 0 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: 0.2s;
+        }
+        .search-wrapper:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(211, 84, 0, 0.15);
+        }
+        .search-wrapper i {
+            color: #9CA3AF;
+            margin-right: 10px;
+        }
+        .search-wrapper input {
+            border: none;
+            width: 100%;
+            padding: 14px 0;
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+        }
+        .search-wrapper input:focus { outline: none; }
+
         .section-title {
             font-size: 1.1rem; font-weight: 700; margin-bottom: 15px;
             display: flex; align-items: center; gap: 10px; color: var(--text-main);
@@ -137,6 +197,7 @@
             font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;
             color: var(--text-sub); margin-bottom: 10px; font-weight: 600;
             border-left: 4px solid var(--primary); padding-left: 10px;
+            transition: opacity 0.3s;
         }
 
         .stock-item {
@@ -218,6 +279,14 @@
         </nav>
 
         <main id="mainContent">
+            <!-- SEARCH BAR (Hanya muncul jika tab bukan Status, tapi tetap ada di DOM) -->
+            <div class="search-container" id="searchContainer" style="display: none;">
+                <div class="search-wrapper">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="adminSearchInput" placeholder="Cari nama menu..." autocomplete="off">
+                </div>
+            </div>
+
             <!-- Tab: Status -->
             <div id="tab-status" class="tab-content">
                 <div class="status-card">
@@ -496,6 +565,10 @@
                     weekendItems.forEach(item => weekendContainer.appendChild(createStockItem(item)));
                 }
             });
+
+            // Re-apply search filter if text exists
+            const searchTerm = document.getElementById('adminSearchInput').value;
+            if(searchTerm) filterStockList(searchTerm);
         }
 
         function createStockItem(item) {
@@ -520,6 +593,57 @@
             return div;
         }
 
+        // --- SEARCH FUNCTIONALITY ---
+        const searchInput = document.getElementById('adminSearchInput');
+        searchInput.addEventListener('keyup', (e) => {
+            filterStockList(e.target.value);
+        });
+
+        function filterStockList(term) {
+            const lowerTerm = term.toLowerCase();
+            
+            // Cek tab mana yang aktif
+            const isDailyTab = document.getElementById('tab-daily').style.display === 'block';
+            const isWeekendTab = document.getElementById('tab-weekend').style.display === 'block';
+
+            if(!isDailyTab && !isWeekendTab) return; // Jangan filter jika di tab Status
+
+            const containerId = isDailyTab ? 'dailyStockList' : 'weekendStockList';
+            const container = document.getElementById(containerId);
+            const items = container.querySelectorAll('.stock-item');
+            const headers = container.querySelectorAll('.category-label');
+
+            // 1. Filter Items
+            items.forEach(item => {
+                const name = item.querySelector('h4').innerText.toLowerCase();
+                if(name.includes(lowerTerm)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            // 2. Filter Category Headers
+            // Header harus muncul jika ada setidaknya 1 item di bawahnya yang visible
+            headers.forEach(header => {
+                let hasVisibleItem = false;
+                let nextElement = header.nextElementSibling;
+                
+                // Cek elemen setelah header sampai ketemu header lain lagi
+                while(nextElement) {
+                    if(nextElement.classList.contains('category-label')) break; // Ketemu kategori baru, stop
+                    if(nextElement.classList.contains('stock-item') && nextElement.style.display !== 'none') {
+                        hasVisibleItem = true;
+                        break;
+                    }
+                    nextElement = nextElement.nextElementSibling;
+                }
+
+                header.style.display = hasVisibleItem ? 'block' : 'none';
+            });
+        }
+
+
         // --- ACTIONS ---
         function switchTab(tabName) {
             // Update Nav
@@ -531,6 +655,16 @@
             
             // Show target
             document.getElementById(`tab-${tabName}`).style.display = 'block';
+
+            // Toggle Search Bar Visibility
+            const searchContainer = document.getElementById('searchContainer');
+            if(tabName === 'status') {
+                searchContainer.style.display = 'none';
+            } else {
+                searchContainer.style.display = 'block';
+                // Re-apply filter if there is text
+                if(searchInput.value) filterStockList(searchInput.value);
+            }
         }
 
         function setStoreStatus(mode) {
