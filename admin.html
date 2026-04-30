@@ -357,8 +357,8 @@
 
     <div id="toast">Berhasil disimpan</div>
 
-    <script>
-        // --- DATA MENU (DICOPY DARI HTML PELANGGAN) ---
+       <script>
+        // --- DATA MENU (HARUS SAMA PERSIS DENGAN data-name DI HTML PELANGGAN) ---
         // Kita mendefinisikan menu di sini agar Admin tahu item apa yang harus ditoggle
         const menuItems = [
             // PAKET
@@ -371,7 +371,7 @@
             // BUBUR
             { name: "Bubur Ayam Biasa", category: "Bubur", isWeekend: false },
             { name: "Bubur + Telur Ayam Kampung", category: "Bubur", isWeekend: false },
-            { name: "Bubur Polos / Putih", category: "Bubur", isWeekend: false },
+            { name: "Bubur Polos / Putih", category: "Bubur", isWeekend: false }, // PERHATIKAN INI
             { name: "Extra Merah Telur Ayam Kampung", category: "Topping", isWeekend: false },
             { name: "Extra Ayam Rebus", category: "Topping", isWeekend: false },
             { name: "Extra Cakwe Iris", category: "Topping", isWeekend: false },
@@ -575,7 +575,7 @@
             const isWeekendItem = item.isWeekend;
             const data = isWeekendItem ? weekendStockData : stockData;
             // Default true if undefined (available)
-            const isAvailable = data[item.name] !== false;
+            const isAvailable = data[item.name.trim()] !== false;
 
             const div = document.createElement('div');
             div.className = 'stock-item';
@@ -586,7 +586,7 @@
                 <label class="switch">
                     <input type="checkbox" 
                         ${isAvailable ? 'checked' : ''} 
-                        onchange="toggleStock('${item.name}', ${isWeekendItem})">
+                        onchange="toggleStock('${item.name.trim()}', ${isWeekendItem})">
                     <span class="slider"></span>
                 </label>
             `;
@@ -600,13 +600,13 @@
         });
 
         function filterStockList(term) {
-            const lowerTerm = term.toLowerCase();
+            const lowerTerm = term.toLowerCase().trim();
             
             // Cek tab mana yang aktif
             const isDailyTab = document.getElementById('tab-daily').style.display === 'block';
             const isWeekendTab = document.getElementById('tab-weekend').style.display === 'block';
 
-            if(!isDailyTab && !isWeekendTab) return; // Jangan filter jika di tab Status
+            if(!isDailyTab && !isWeekendTab) return; 
 
             const containerId = isDailyTab ? 'dailyStockList' : 'weekendStockList';
             const container = document.getElementById(containerId);
@@ -615,7 +615,7 @@
 
             // 1. Filter Items
             items.forEach(item => {
-                const name = item.querySelector('h4').innerText.toLowerCase();
+                const name = item.querySelector('h4').innerText.toLowerCase().trim();
                 if(name.includes(lowerTerm)) {
                     item.style.display = 'flex';
                 } else {
@@ -631,7 +631,7 @@
                 
                 // Cek elemen setelah header sampai ketemu header lain lagi
                 while(nextElement) {
-                    if(nextElement.classList.contains('category-label')) break; // Ketemu kategori baru, stop
+                    if(nextElement.classList.contains('category-label')) break; 
                     if(nextElement.classList.contains('stock-item') && nextElement.style.display !== 'none') {
                         hasVisibleItem = true;
                         break;
@@ -678,10 +678,13 @@
 
         function toggleStock(itemName, isWeekend) {
             const newData = event.target.checked; // true if available, false if empty
+            const cleanName = itemName.trim(); // FIX: TRIM ADDED DI SINI JUGA
             const path = isWeekend ? 'bubur_grace/weekendStock/' : 'bubur_grace/stock/';
             
+            console.log("Menulis ke Firebase:", path + cleanName, newData); // DEBUG LOG
+
             if(db) {
-                db.ref(path + itemName).set(newData, (error) => {
+                db.ref(path + cleanName).set(newData, (error) => {
                     if(error) {
                         showToast("Gagal menyimpan!", "error");
                         event.target.checked = !newData; // Revert UI
