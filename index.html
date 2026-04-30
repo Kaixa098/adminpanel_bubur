@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- FIREBASE SDK (Sama dengan file pelanggan) -->
+    <!-- FIREBASE SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
@@ -54,7 +54,7 @@
         }
         .login-logo {
             width: 80px; height: 80px; border-radius: 50%; margin-bottom: 20px;
-            object-fit: cover; border: 4px solid var(--primary-light);
+            object-fit: cover; border: 4px solid #FFF7ED;
         }
         .login-input {
             width: 100%; padding: 15px; margin: 20px 0;
@@ -114,33 +114,9 @@
             position: sticky;
             top: 0;
             z-index: 10;
-            background: var(--bg-body); /* Match body bg for smooth scrolling */
+            background: var(--bg-body); 
             padding-bottom: 5px;
         }
-        .admin-search-input {
-            width: 100%;
-            padding: 14px 20px;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            font-size: 1rem;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            background: white;
-            font-family: 'Inter', sans-serif;
-            transition: all 0.2s;
-        }
-        .admin-search-input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 4px 12px rgba(211, 84, 0, 0.15);
-            outline: none;
-        }
-        .search-icon {
-            position: absolute;
-            left: 15px; /* Adjusted logic to fit inside or use placeholder */
-            top: 50%;
-            transform: translateY(-50%);
-            color: #9CA3AF;
-        }
-        /* Simple version with icon via placeholder or flex wrapper */
         .search-wrapper {
             display: flex;
             align-items: center;
@@ -279,7 +255,7 @@
         </nav>
 
         <main id="mainContent">
-            <!-- SEARCH BAR (Hanya muncul jika tab bukan Status, tapi tetap ada di DOM) -->
+            <!-- SEARCH BAR -->
             <div class="search-container" id="searchContainer" style="display: none;">
                 <div class="search-wrapper">
                     <i class="fa-solid fa-magnifying-glass"></i>
@@ -358,8 +334,9 @@
     <div id="toast">Berhasil disimpan</div>
 
        <script>
-        // --- DATA MENU (HARUS SAMA PERSIS DENGAN data-name DI HTML PELANGGAN) ---
-        // Kita mendefinisikan menu di sini agar Admin tahu item apa yang harus ditoggle
+        // --- DATA MENU (SIMPAN & PASTIKAN SINKRONISASI) ---
+        // Pastikan Nama 'name' di sini SAMA PERSIS dengan data-name di HTML Pelanggan
+        // Termasuk huruf besar/kecil dan spasi.
         const menuItems = [
             // PAKET
             { name: "Paket A (Bubur Biasa + Minuman)", category: "Paket", isWeekend: false },
@@ -371,7 +348,7 @@
             // BUBUR
             { name: "Bubur Ayam Biasa", category: "Bubur", isWeekend: false },
             { name: "Bubur + Telur Ayam Kampung", category: "Bubur", isWeekend: false },
-             { name: "Bubur Polos/Putih", category: "Bubur", isWeekend: false },
+            { name: "Bubur Polos Putih", category: "Bubur", isWeekend: false },
             { name: "Extra Merah Telur Ayam Kampung", category: "Topping", isWeekend: false },
             { name: "Extra Ayam Rebus", category: "Topping", isWeekend: false },
             { name: "Extra Cakwe Iris", category: "Topping", isWeekend: false },
@@ -453,7 +430,7 @@
             { name: "Extra Es Batu", category: "Minuman", isWeekend: false },
         ];
 
-        // --- FIREBASE CONFIG (HARUS SAMA PERSIS DENGAN FILE PELANGGAN) ---
+        // --- FIREBASE CONFIG ---
         const firebaseConfig = {
             apiKey: "AIzaSyCj__JH5w__RdSEqtR59Cr7ctEOyl6lzUg",
             authDomain: "buburgrace.firebaseapp.com",
@@ -463,8 +440,8 @@
 
         let db;
         let storeStatusMode = 'auto';
-        let stockData = {}; // Untuk Harian
-        let weekendStockData = {}; // Untuk Weekend
+        let stockData = {}; 
+        let weekendStockData = {}; 
 
         // --- LOGIN LOGIC ---
         function attemptLogin() {
@@ -492,6 +469,7 @@
             try {
                 firebase.initializeApp(firebaseConfig);
                 db = firebase.database();
+                console.log("Firebase initialized successfully");
                 
                 // 1. Listen Status
                 db.ref('bubur_grace/status').on('value', (snapshot) => {
@@ -506,6 +484,7 @@
                 db.ref('bubur_grace/stock').on('value', (snapshot) => {
                     const data = snapshot.val();
                     stockData = data || {};
+                    console.log("Daily Stock Updated:", stockData);
                     renderStockLists();
                 });
 
@@ -513,10 +492,10 @@
                 db.ref('bubur_grace/weekendStock').on('value', (snapshot) => {
                     const data = snapshot.val();
                     weekendStockData = data || {};
+                    console.log("Weekend Stock Updated:", weekendStockData);
                     renderStockLists();
                 });
 
-                // Render initial list if empty
                 renderStockLists();
 
             } catch (e) {
@@ -546,27 +525,25 @@
             dailyContainer.innerHTML = '';
             weekendContainer.innerHTML = '';
 
-            // Group by category for cleaner UI
             const categories = [...new Set(menuItems.map(i => i.category))];
 
             categories.forEach(cat => {
                 const dailyItems = menuItems.filter(i => i.category === cat && !i.isWeekend);
                 const weekendItems = menuItems.filter(i => i.category === cat && i.isWeekend);
 
-                if(dailyItems.length > 0) {
+                if(dailyItems.length >0) {
                     const catHeader = `<div class="category-label">${cat}</div>`;
                     dailyContainer.insertAdjacentHTML('beforeend', catHeader);
                     dailyItems.forEach(item => dailyContainer.appendChild(createStockItem(item)));
                 }
 
-                if(weekendItems.length > 0) {
+                if(weekendItems.length >0) {
                     const catHeader = `<div class="category-label">${cat}</div>`;
                     weekendContainer.insertAdjacentHTML('beforeend', catHeader);
                     weekendItems.forEach(item => weekendContainer.appendChild(createStockItem(item)));
                 }
             });
 
-            // Re-apply search filter if text exists
             const searchTerm = document.getElementById('adminSearchInput').value;
             if(searchTerm) filterStockList(searchTerm);
         }
@@ -574,8 +551,11 @@
         function createStockItem(item) {
             const isWeekendItem = item.isWeekend;
             const data = isWeekendItem ? weekendStockData : stockData;
-            // Default true if undefined (available)
-            const isAvailable = data[item.name.trim()] !== false;
+            
+            // GUNAKAN NAME LANGSUNG UNTUK KUNCI (SIMPLIFIED)
+            const keyToCheck = item.name.trim(); 
+            
+            const isAvailable = (data[keyToCheck] !== false);
 
             const div = document.createElement('div');
             div.className = 'stock-item';
@@ -584,12 +564,15 @@
                     <h4>${item.name}</h4>
                 </div>
                 <label class="switch">
-                    <input type="checkbox" 
-                        ${isAvailable ? 'checked' : ''} 
-                        onchange="toggleStock('${item.name.trim()}', ${isWeekendItem})">
+                    <input type="checkbox" ${isAvailable ? 'checked' : ''}>
                     <span class="slider"></span>
                 </label>
             `;
+            
+            const checkbox = div.querySelector('input');
+            // ADD EVENT LISTENER
+            checkbox.addEventListener('change', () => toggleStock(keyToCheck, isWeekendItem, checkbox));
+
             return div;
         }
 
@@ -602,7 +585,6 @@
         function filterStockList(term) {
             const lowerTerm = term.toLowerCase().trim();
             
-            // Cek tab mana yang aktif
             const isDailyTab = document.getElementById('tab-daily').style.display === 'block';
             const isWeekendTab = document.getElementById('tab-weekend').style.display === 'block';
 
@@ -613,7 +595,6 @@
             const items = container.querySelectorAll('.stock-item');
             const headers = container.querySelectorAll('.category-label');
 
-            // 1. Filter Items
             items.forEach(item => {
                 const name = item.querySelector('h4').innerText.toLowerCase().trim();
                 if(name.includes(lowerTerm)) {
@@ -623,13 +604,10 @@
                 }
             });
 
-            // 2. Filter Category Headers
-            // Header harus muncul jika ada setidaknya 1 item di bawahnya yang visible
             headers.forEach(header => {
                 let hasVisibleItem = false;
                 let nextElement = header.nextElementSibling;
                 
-                // Cek elemen setelah header sampai ketemu header lain lagi
                 while(nextElement) {
                     if(nextElement.classList.contains('category-label')) break; 
                     if(nextElement.classList.contains('stock-item') && nextElement.style.display !== 'none') {
@@ -646,23 +624,18 @@
 
         // --- ACTIONS ---
         function switchTab(tabName) {
-            // Update Nav
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
             event.currentTarget.classList.add('active');
 
-            // Hide all contents
             document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
             
-            // Show target
             document.getElementById(`tab-${tabName}`).style.display = 'block';
 
-            // Toggle Search Bar Visibility
             const searchContainer = document.getElementById('searchContainer');
             if(tabName === 'status') {
                 searchContainer.style.display = 'none';
             } else {
                 searchContainer.style.display = 'block';
-                // Re-apply filter if there is text
                 if(searchInput.value) filterStockList(searchInput.value);
             }
         }
@@ -676,19 +649,28 @@
             }
         }
 
-        function toggleStock(itemName, isWeekend) {
-            const newData = event.target.checked; // true if available, false if empty
-            const cleanName = itemName.trim(); // FIX: TRIM ADDED DI SINI JUGA
-            const path = isWeekend ? 'bubur_grace/weekendStock/' : 'bubur_grace/stock/';
+        // --- FUNGSI UPDATE STOK (FINAL FIX) ---
+        function toggleStock(itemName, isWeekend, checkboxElement) {
+            // DEBUGGING: Buka Console (F12) untuk melihat log ini
+            console.log(">>> DEBUG STOCK <<<");
+            console.log("Nama Item:", itemName);
+            console.log("Status Checkbox:", checkboxElement.checked);
             
-            console.log("Menulis ke Firebase:", path + cleanName, newData); // DEBUG LOG
-
+            const newData = checkboxElement.checked; 
+            const path = isWeekend ? 'bubur_grace/weekendStock/' : 'bubur_grace/stock/';
+            const fullPath = path + itemName;
+            
+            console.log("Path Firebase:", fullPath);
+            console.log("Value to set:", newData);
+            
             if(db) {
-                db.ref(path + cleanName).set(newData, (error) => {
+                db.ref(fullPath).set(newData, (error) => {
                     if(error) {
+                        console.error("Firebase Write Error:", error);
                         showToast("Gagal menyimpan!", "error");
-                        event.target.checked = !newData; // Revert UI
+                        checkboxElement.checked = !newData; 
                     } else {
+                        console.log("Firebase Write Success");
                         showToast(newData ? "Stok Tersedia" : "Stok Habis");
                     }
                 });
@@ -703,7 +685,6 @@
             setTimeout(() => { t.className = t.className.replace("show", ""); }, 3000);
         }
 
-        // Handle Enter key on password
         document.getElementById('adminPassword').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') attemptLogin();
         });
