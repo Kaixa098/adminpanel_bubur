@@ -77,7 +77,7 @@
         
         header {
             background: white; padding: 15px 20px;
-            border-bottom: 1px solid var(--border);
+            border-bottom:1px solid var(--border);
             display: flex; justify-content: space-between; align-items: center;
             flex-shrink: 0;
         }
@@ -115,13 +115,13 @@
             top: 0;
             z-index: 10;
             background: var(--bg-body); 
-            padding-bottom: 5px;
+            padding-bottom:5px;
         }
         .search-wrapper {
             display: flex;
             align-items: center;
             background: white;
-            border: 1px solid var(--border);
+            border:1px solid var(--border);
             border-radius: 12px;
             padding: 0 15px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
@@ -167,6 +167,31 @@
         .status-opt.active-green { border-color: var(--success); background: #ECFDF5; }
         .status-opt.active-red { border-color: var(--danger); background: #FEF2F2; }
 
+        /* --- NEW: MASTER ACTION BUTTONS --- */
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .btn-action {
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: transform 0.1s, opacity 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .btn-action:active { transform: scale(0.98); }
+        .btn-action.on { background: var(--success); }
+        .btn-action.off { background: var(--danger); }
+
         /* Stock List */
         .stock-category-group { margin-bottom: 30px; }
         .category-label {
@@ -186,7 +211,7 @@
         .item-info h4 { font-size: 0.95rem; color: var(--text-main); font-weight: 500; }
         .item-info span { font-size: 0.8rem; color: var(--text-sub); }
 
-        /* Toggle Switch */
+        /* Toggle Switch (INDIVIDUAL - TETAP ADA) */
         .switch {
             position: relative; display: inline-block; width: 50px; height: 26px;
             flex-shrink: 0; margin-left: 15px;
@@ -211,7 +236,7 @@
             position: fixed; z-index: 10000; left: 50%; bottom: 30px;
             transform: translateX(-50%); font-size: 0.9rem; opacity: 0; transition: 0.3s;
         }
-        #toast.show { visibility: visible; opacity: 1; bottom: 40px; }
+        #toast.show { visibility: visible; opacity:1; bottom: 40px; }
 
         @media (max-width: 600px) {
             .status-options { grid-template-columns: 1fr; }
@@ -309,6 +334,18 @@
                 <div class="section-title">
                     <i class="fa-solid fa-utensils"></i> Stok Menu Harian
                 </div>
+                
+                <!-- 1. TOMBOL MASTER (DI ATAS) -->
+                <div class="action-buttons">
+                    <button class="btn-action on" onclick="masterSwitch('daily', true)">
+                        <i class="fa-solid fa-power-off"></i> HIDUPKAN SEMUA
+                    </button>
+                    <button class="btn-action off" onclick="masterSwitch('daily', false)">
+                        <i class="fa-solid fa-power-off"></i> MATIKAN SEMUA
+                    </button>
+                </div>
+
+                <!-- 2. DAFTAR MENU DENGAN SWITCH INDIVIDUAL (DI BAWAH) -->
                 <div id="dailyStockList">
                     <!-- JS generated list -->
                 </div>
@@ -324,6 +361,18 @@
                         Menu di bawah ini khusus Nasi Uduk dan turunannya. Meskipun ini tab "Weekend", stok di sini tetap bisa diatur kapan saja.
                     </p>
                 </div>
+
+                <!-- 1. TOMBOL MASTER (DI ATAS) -->
+                <div class="action-buttons">
+                    <button class="btn-action on" onclick="masterSwitch('weekend', true)">
+                        <i class="fa-solid fa-power-off"></i> HIDUPKAN SEMUA
+                    </button>
+                    <button class="btn-action off" onclick="masterSwitch('weekend', false)">
+                        <i class="fa-solid fa-power-off"></i> MATIKAN SEMUA
+                    </button>
+                </div>
+
+                <!-- 2. DAFTAR MENU DENGAN SWITCH INDIVIDUAL (DI BAWAH) -->
                 <div id="weekendStockList">
                     <!-- JS generated list -->
                 </div>
@@ -452,7 +501,7 @@
                     document.getElementById('loginScreen').style.display = 'none';
                     document.getElementById('dashboardScreen').style.display = 'flex';
                     initFirebase();
-                }, 500);
+                },500);
             } else {
                 const err = document.getElementById('loginError');
                 err.innerText = "Password Salah! Coba lagi.";
@@ -471,7 +520,7 @@
                 db = firebase.database();
                 console.log("Firebase initialized successfully");
                 
-                // 1. Listen Status
+                //1. Listen Status
                 db.ref('bubur_grace/status').on('value', (snapshot) => {
                     const val = snapshot.val();
                     if(val) {
@@ -480,7 +529,7 @@
                     }
                 });
 
-                // 2. Listen Stock Harian
+                //2. Listen Stock Harian
                 db.ref('bubur_grace/stock').on('value', (snapshot) => {
                     const data = snapshot.val();
                     stockData = data || {};
@@ -488,7 +537,7 @@
                     renderStockLists();
                 });
 
-                // 3. Listen Stock Weekend
+                //3. Listen Stock Weekend
                 db.ref('bubur_grace/weekendStock').on('value', (snapshot) => {
                     const data = snapshot.val();
                     weekendStockData = data || {};
@@ -559,6 +608,7 @@
 
             const div = document.createElement('div');
             div.className = 'stock-item';
+            // NOTE: Switch Individual ada di bawah (label class="switch")
             div.innerHTML = `
                 <div class="item-info">
                     <h4>${item.name}</h4>
@@ -570,7 +620,7 @@
             `;
             
             const checkbox = div.querySelector('input');
-            // ADD EVENT LISTENER
+            // ADD EVENT LISTENER UNTUK SWITCH INDIVIDUAL
             checkbox.addEventListener('change', () => toggleStock(keyToCheck, isWeekendItem, checkbox));
 
             return div;
@@ -649,7 +699,34 @@
             }
         }
 
-        // --- FUNGSI UPDATE STOK (FINAL FIX) ---
+        // --- FUNGSI MASTER SWITCH (NEW) ---
+        function masterSwitch(type, status) {
+            if(!confirm(`Yakin ingin mengatur SEMUA item di tab ini menjadi ${status ? 'READY' : 'HABIS'}?`)) return;
+
+            const isWeekend = (type === 'weekend');
+            const itemsToUpdate = menuItems.filter(i => i.isWeekend === isWeekend);
+            
+            // Build update object for efficiency
+            const updateObj = {};
+            itemsToUpdate.forEach(item => {
+                updateObj[item.name] = status;
+            });
+
+            const path = isWeekend ? 'bubur_grace/weekendStock' : 'bubur_grace/stock';
+
+            if(db) {
+                db.ref(path).update(updateObj, (error) => {
+                    if(error) {
+                        console.error("Master Switch Error:", error);
+                        showToast("Gagal Update!", "error");
+                    } else {
+                        showToast(`Berhasil: ${itemsToUpdate.length} item diubah`);
+                    }
+                });
+            }
+        }
+
+        // --- FUNGSI UPDATE STOK INDIVIDUAL (FINAL FIX) ---
         function toggleStock(itemName, isWeekend, checkboxElement) {
             // DEBUGGING: Buka Console (F12) untuk melihat log ini
             console.log(">>> DEBUG STOCK <<<");
