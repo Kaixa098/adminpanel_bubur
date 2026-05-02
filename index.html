@@ -111,36 +111,21 @@
         /* --- SEARCH BAR --- */
         .search-container {
             margin-bottom:20px;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            background: var(--bg-body); 
-            padding-bottom:5px;
+            position: sticky; top: 0; z-index: 10;
+            background: var(--bg-body); padding-bottom:5px;
         }
         .search-wrapper {
-            display: flex;
-            align-items: center;
-            background: white;
-            border:1px solid var(--border);
-            border-radius: 12px;
-            padding: 0 15px;
+            display: flex; align-items: center;
+            background: white; border:1px solid var(--border);
+            border-radius: 12px; padding: 0 15px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
             transition: 0.2s;
         }
-        .search-wrapper:focus-within {
-            border-color: var(--primary);
-            box-shadow: 0 4px 12px rgba(211, 84, 0, 0.15);
-        }
-        .search-wrapper i {
-            color: #9CA3AF;
-            margin-right: 10px;
-        }
+        .search-wrapper:focus-within { border-color: var(--primary); box-shadow: 0 4px 12px rgba(211, 84, 0, 0.15); }
+        .search-wrapper i { color: #9CA3AF; margin-right: 10px; }
         .search-wrapper input {
-            border: none;
-            width: 100%;
-            padding: 14px 0;
-            font-size: 1rem;
-            font-family: 'Inter', sans-serif;
+            border: none; width: 100%; padding: 14px 0;
+            font-size: 1rem; font-family: 'Inter', sans-serif;
         }
         .search-wrapper input:focus { outline: none; }
 
@@ -167,33 +152,7 @@
         .status-opt.active-green { border-color: var(--success); background: #ECFDF5; }
         .status-opt.active-red { border-color: var(--danger); background: #FEF2F2; }
 
-        /* --- NEW: MASTER ACTION BUTTONS --- */
-        .action-buttons {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .btn-action {
-            padding: 12px;
-            border: none;
-            border-radius: 10px;
-            font-weight: 600;
-            color: white;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: transform 0.1s, opacity 0.2s;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            font-size: 0.9rem;
-        }
-        .btn-action:active { transform: scale(0.98); }
-        .btn-action.on { background: var(--success); }
-        .btn-action.off { background: var(--danger); }
-
-        /* Stock List */
+        /* --- STOCK CONTROL WRAPPER (PERUBAHAN) --- */
         .stock-category-group { margin-bottom: 30px; }
         .category-label {
             font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;
@@ -206,48 +165,29 @@
             background: white; padding: 15px; border-radius: 12px;
             display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 10px; border: 1px solid transparent;
-            transition: 0.2s;
+            transition: 0.2s; flex-wrap: wrap; gap: 10px;
         }
-        .stock-item:hover { border-color: var(--border); transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .stock-item:hover { border-color: var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
         
-        .item-info {
-            /* Perbaikan Agar Switch Tidak Ketutup di Mobile */
-            flex: 1; 
-            min-width: 0; /* Agar teks bisa mengecil jika layar sempit */
-            margin-right: 10px;
-        }
-
+        .item-info { flex: 1; min-width: 0; }
         .item-info h4 { 
-            font-size: 0.95rem; 
-            color: var(--text-main); 
-            font-weight: 500; 
-            line-height: 1.3;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
+            font-size: 0.95rem; color: var(--text-main); font-weight: 500; line-height: 1.3;
+            overflow: hidden; text-overflow: ellipsis;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
         }
-        .item-info span { font-size: 0.8rem; color: var(--text-sub); display: none; /* Hide price on mobile list to save space */ }
 
-        /* Toggle Switch */
-        .switch {
-            position: relative; display: inline-block; width: 50px; height: 26px;
-            flex-shrink: 0; /* Pastikan tombol tidak mengecil */
-            margin-left: 0; /* Reset margin karena item-info sudah handle gap */
+        /* INPUT STOCK CONTROL */
+        .stock-control-wrapper { display: flex; align-items: center; gap: 5px; }
+        .stock-input {
+            width: 80px; padding: 8px; border: 1px solid var(--border); border-radius: 8px;
+            text-align: center; font-weight: bold; color: var(--primary);
         }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider {
-            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #ccc; transition: .4s; border-radius: 34px;
+        .stock-input:focus { border-color: var(--primary); outline: none; }
+        .btn-save-stock {
+            background: var(--primary); color: white; border: none; padding: 8px 12px;
+            border-radius: 8px; cursor: pointer; font-size: 0.8rem; font-weight: 600;
         }
-        .slider:before {
-            position: absolute; content: ""; height: 20px; width: 20px;
-            left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-        input:checked + .slider { background-color: var(--primary); }
-        input:checked + .slider:before { transform: translateX(24px); }
+        .btn-save-stock:hover { background: var(--primary-dark); }
 
         /* Toast */
         #toast {
@@ -258,31 +198,19 @@
         }
         #toast.show { visibility: visible; opacity:1; bottom: 40px; }
 
-        /* --- RESPONSIVE FIXES --- */
+        /* Order Card Styles (History) */
+        .order-card {
+            background: white; border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .order-header { display: flex; justify-content: space-between; margin-bottom: 8px; border-bottom: 1px dashed #eee; padding-bottom: 8px; }
+        .order-total { font-weight: 700; font-size: 1rem; }
+        .btn-complete { background: var(--success); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600; }
+        .btn-complete:hover { background-color: #059669; }
+
+        /* Responsive */
         @media (max-width: 600px) {
             .status-options { grid-template-columns: 1fr; }
-            .btn-action { font-size: 0.85rem; padding: 10px; }
-            .section-title { font-size: 1rem; }
-        }
-
-        /* Perbaikan Khusus Mobile Kecil (iPhone SE/Mini) */
-        @media (max-width: 400px) {
-            .stock-item {
-                padding: 10px 12px;
-            }
-            .item-info h4 {
-                font-size: 0.85rem;
-                -webkit-line-clamp: 2; /* Batasi 2 baris */
-            }
-            .switch {
-                transform: scale(0.9); /* Perkecil switch dikit agar muat */
-                width: 45px; height: 23px;
-            }
-            .slider:before {
-                height: 17px; width: 17px;
-                left: 3px; bottom: 3px;
-            }
-            input:checked + .slider:before { transform: translateX(22px); }
         }
     </style>
 </head>
@@ -317,20 +245,13 @@
         </header>
 
         <nav class="nav-tabs">
-            <div class="nav-tab active" onclick="switchTab('status')"><i class="fa-solid fa-store"></i> Status Toko</div>
+            <div class="nav-tab active" onclick="switchTab('status')"><i class="fa-solid fa-store"></i> Status</div>
             <div class="nav-tab" onclick="switchTab('daily')"><i class="fa-solid fa-box-open"></i> Stok Harian</div>
             <div class="nav-tab" onclick="switchTab('weekend')"><i class="fa-solid fa-umbrella-beach"></i> Stok Weekend</div>
+            <div class="nav-tab" onclick="switchTab('history')"><i class="fa-solid fa-clock-rotate-left"></i> Riwayat</div>
         </nav>
 
         <main id="mainContent">
-            <!-- SEARCH BAR -->
-            <div class="search-container" id="searchContainer" style="display: none;">
-                <div class="search-wrapper">
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" id="adminSearchInput" placeholder="Cari nama menu..." autocomplete="off">
-                </div>
-            </div>
-
             <!-- Tab: Status -->
             <div id="tab-status" class="tab-content">
                 <div class="status-card">
@@ -339,7 +260,7 @@
                         Atur Mode Operasional
                     </div>
                     <p style="font-size: 0.9rem; color: #666; line-height: 1.5; margin-bottom: 20px;">
-                        Kontrol status buka/tutup toko dan ketersediaan menu Nasi Uduk (Weekend).
+                        Kontrol status buka/tutup toko.
                     </p>
                     <div class="status-options">
                         <div class="status-opt" id="opt-auto" onclick="setStoreStatus('auto')">
@@ -359,65 +280,38 @@
                         </div>
                     </div>
                 </div>
-
-                <div class="status-card" style="background: #FFFBEB; border: 1px solid #FCD34D;">
-                    <div class="section-title" style="color: #B45309;">
-                        <i class="fa-solid fa-circle-info"></i> Informasi Waktu
-                    </div>
-                    <p style="font-size: 0.9rem; color: #92400E;">
-                        <strong>Jam Buka:</strong> Selasa - Minggu, 06:00 - 12:00 WIB.<br>
-                        <strong>Jam Tutup:</strong> Senin (Libur).<br>
-                        Pada mode "Otomatis", Nasi Uduk hanya muncul Sabtu & Minggu.
-                    </p>
-                </div>
             </div>
 
             <!-- Tab: Daily Stock -->
             <div id="tab-daily" class="tab-content" style="display: none;">
-                <div class="section-title">
-                    <i class="fa-solid fa-utensils"></i> Stok Menu Harian
+                <div class="status-card" style="background: #F0F9FF; border: 1px solid #BAE6FD;">
+                    <div class="section-title" style="color: #0369A1;">
+                        <i class="fa-solid fa-boxes-stacked"></i> Atur Stok (Jumlah)
+                    </div>
+                    <p style="font-size: 0.9rem; color: #0C4A6E;">
+                        Masukkan jumlah stok fisik. Jika dikosongkan, dianggap stok <strong>Unlimited (Selalu Tersedia)</strong>.
+                    </p>
                 </div>
-                
-                <!-- 1. TOMBOL MASTER (DI ATAS) -->
-                <div class="action-buttons">
-                    <button class="btn-action on" onclick="masterSwitch('daily', true)">
-                        <i class="fa-solid fa-power-off"></i> HIDUPKAN SEMUA
-                    </button>
-                    <button class="btn-action off" onclick="masterSwitch('daily', false)">
-                        <i class="fa-solid fa-power-off"></i> MATIKAN SEMUA
-                    </button>
-                </div>
-
-                <!-- 2. DAFTAR MENU DENGAN SWITCH INDIVIDUAL (DI BAWAH) -->
-                <div id="dailyStockList">
-                    <!-- JS generated list -->
-                </div>
+                <div id="dailyStockList"></div>
             </div>
 
             <!-- Tab: Weekend Stock -->
             <div id="tab-weekend" class="tab-content" style="display: none;">
                 <div class="status-card" style="background: #EFF6FF; border: 1px solid #BFDBFE;">
                     <div class="section-title" style="color: #1E40AF;">
-                        <i class="fa-solid fa-sun"></i> Area Menu Weekend
+                        <i class="fa-solid fa-sun"></i> Stok Weekend
                     </div>
-                    <p style="font-size: 0.9rem; color: #1E3A8A;">
-                        Menu di bawah ini khusus Nasi Uduk dan turunannya. Meskipun ini tab "Weekend", stok di sini tetap bisa diatur kapan saja.
-                    </p>
                 </div>
+                <div id="weekendStockList"></div>
+            </div>
 
-                <!-- 1. TOMBOL MASTER (DI ATAS) -->
-                <div class="action-buttons">
-                    <button class="btn-action on" onclick="masterSwitch('weekend', true)">
-                        <i class="fa-solid fa-power-off"></i> HIDUPKAN SEMUA
-                    </button>
-                    <button class="btn-action off" onclick="masterSwitch('weekend', false)">
-                        <i class="fa-solid fa-power-off"></i> MATIKAN SEMUA
-                    </button>
+            <!-- Tab: History -->
+            <div id="tab-history" class="tab-content" style="display: none;">
+                <div class="section-title">
+                    <i class="fa-solid fa-clock-rotate-left" style="color: var(--primary);"></i> Riwayat Pesanan Masuk
                 </div>
-
-                <!-- 2. DAFTAR MENU DENGAN SWITCH INDIVIDUAL (DI BAWAH) -->
-                <div id="weekendStockList">
-                    <!-- JS generated list -->
+                <div id="ordersList">
+                    <div class="empty-history">Memuat data pesanan...</div>
                 </div>
             </div>
         </main>
@@ -425,10 +319,8 @@
 
     <div id="toast">Berhasil disimpan</div>
 
-       <script>
-        // --- DATA MENU (SIMPAN & PASTIKAN SINKRONISASI) ---
-        // Pastikan Nama 'name' di sini SAMA PERSIS dengan data-name di HTML Pelanggan
-        // Termasuk huruf besar/kecil dan spasi.
+    <script>
+        // --- DATA MENU ---
         const menuItems = [
             // PAKET
             { name: "Paket A (Bubur Biasa + Minuman)", category: "Paket", isWeekend: false },
@@ -517,7 +409,7 @@
             { name: "Teh Tawar", category: "Minuman", isWeekend: false },
             { name: "Teh Manis", category: "Minuman", isWeekend: false },
             { name: "Es Teh", category: "Minuman", isWeekend: false },
-            { name: "Aqua Botol", category: "Minuman", isWeekend: false },
+            { name: "Aqua Botol", category: "minuman", isWeekend: false },
             { name: "S-tee", category: "Minuman", isWeekend: false },
             { name: "Extra Es Batu", category: "Minuman", isWeekend: false },
         ];
@@ -551,10 +443,7 @@
                 document.getElementById('adminPassword').classList.add('input-error');
             }
         }
-
-        function logout() {
-            location.reload();
-        }
+        function logout() { location.reload(); }
 
         // --- INIT & FIREBASE LISTENERS ---
         function initFirebase() {
@@ -576,7 +465,6 @@
                 db.ref('bubur_grace/stock').on('value', (snapshot) => {
                     const data = snapshot.val();
                     stockData = data || {};
-                    console.log("Daily Stock Updated:", stockData);
                     renderStockLists();
                 });
 
@@ -584,9 +472,11 @@
                 db.ref('bubur_grace/weekendStock').on('value', (snapshot) => {
                     const data = snapshot.val();
                     weekendStockData = data || {};
-                    console.log("Weekend Stock Updated:", weekendStockData);
                     renderStockLists();
                 });
+
+                // 4. LISTEN HISTORY PESANAN
+                listenForOrders();
 
                 renderStockLists();
 
@@ -596,12 +486,87 @@
             }
         }
 
+        // --- HISTORY LOGIC ---
+        function listenForOrders() {
+            const ordersContainer = document.getElementById('ordersList');
+            db.ref('bubur_grace/orders').limitToLast(50).on('value', (snapshot) => {
+                const data = snapshot.val();
+                ordersContainer.innerHTML = '';
+                
+                if(!data) {
+                    ordersContainer.innerHTML = '<div class="empty-history">Belum ada pesanan masuk.</div>';
+                    return;
+                }
+
+                const orders = Object.entries(data).reverse();
+
+                orders.forEach(([key, order]) => {
+                    const date = new Date(order.timestamp);
+                    const timeStr = date.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
+                    const dateStr = date.toLocaleDateString('id-ID', {day: 'numeric', month: 'short'});
+
+                    let statusBadge = '';
+                    let actionButtons = '';
+
+                    if (order.status === 'waiting_payment') {
+                        statusBadge = `<span style="color: #F59E0B; font-weight:bold; font-size: 0.8rem; background: #FEF3C7; padding: 2px 6px; border-radius: 4px;">Menunggu Bayar</span>`;
+                        actionButtons = `<button class="btn-save-stock" onclick="updateOrderStatus('${key}', 'paid')" style="background: var(--success);"><i class="fa-solid fa-check"></i> Terima</button>`;
+                    } else if (order.status === 'paid') {
+                        statusBadge = `<span style="color: var(--success); font-weight:bold; font-size: 0.8rem; background: #ECFDF5; padding: 2px 6px; border-radius: 4px;">LUNAS</span>`;
+                        actionButtons = `<button class="btn-save-stock" onclick="completeOrder('${key}')"><i class="fa-solid fa-check-double"></i> Selesai</button>`;
+                    } else {
+                        statusBadge = `<span style="color: var(--primary); font-weight:bold; font-size: 0.8rem; background: #FFF7ED; padding: 2px 6px; border-radius: 4px;">COD / WA</span>`;
+                        actionButtons = `<button class="btn-save-stock" onclick="completeOrder('${key}')"><i class="fa-solid fa-check"></i> Selesai</button>`;
+                    }
+
+                    let itemsHtml = '';
+                    order.items.forEach(item => {
+                        itemsHtml += `<div>- ${item.name} (${item.qty}x) ${item.notes ? `<small style='color:#d35400'>*${item.notes}</small>` : ''}</div>`;
+                    });
+
+                    const card = document.createElement('div');
+                    card.style.background = "white"; card.style.borderRadius = "12px"; card.style.padding = "15px"; card.style.marginBottom = "15px"; card.style.border = "1px solid var(--border)";
+                    card.innerHTML = `
+                        <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px dashed #eee; padding-bottom:10px;">
+                            <div><strong>#${key.slice(-6).toUpperCase()}</strong><br><small style="color:#888">${dateStr}, ${timeStr}</small></div>
+                            <div style="background:#FFF7ED; color:var(--primary); padding:4px 8px; border-radius:4px; font-weight:600;">${order.customerInfo}</div>
+                        </div>
+                        <div style="margin-bottom:10px;">${statusBadge}</div>
+                        <div style="font-size:0.85rem; color:#555; margin-bottom:10px;">${itemsHtml}</div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; background:#F9FAFB; padding:10px; border-radius:8px;">
+                            <div style="font-weight:700;">Total: ${formatRupiah(order.total)}</div>
+                            ${actionButtons}
+                        </div>
+                    `;
+                    ordersContainer.appendChild(card);
+                });
+            });
+        }
+
+        function completeOrder(orderKey) {
+            if(confirm("Tandai pesanan ini sebagai Selesai?")) {
+                db.ref('bubur_grace/orders/' + orderKey).remove()
+                .then(() => showToast("Pesanan Selesai"))
+                .catch((err) => showToast("Gagal menghapus", "error"));
+            }
+        }
+        function updateOrderStatus(key, status) {
+            if(confirm("Konfirmasi pembayaran ini?")) {
+                db.ref('bubur_grace/orders/' + key).update({ status: status })
+                .then(() => showToast("Status Diperbarui"))
+                .catch((err) => showToast("Gagal update status", "error"));
+            }
+        }
+
+        function formatRupiah(number) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
+        }
+
         // --- UI RENDERING ---
         function updateStatusUI() {
             ['auto', 'open', 'close'].forEach(mode => {
                 const el = document.getElementById(`opt-${mode}`);
                 el.classList.remove('active', 'active-green', 'active-red');
-                
                 if (storeStatusMode === mode) {
                     el.classList.add('active');
                     if(mode === 'open') el.classList.add('active-green');
@@ -635,102 +600,55 @@
                     weekendItems.forEach(item => weekendContainer.appendChild(createStockItem(item)));
                 }
             });
-
-            const searchTerm = document.getElementById('adminSearchInput').value;
-            if(searchTerm) filterStockList(searchTerm);
         }
 
+        // --- UPDATE STOCK ITEM UI (NUMERIC INPUT) ---
         function createStockItem(item) {
             const isWeekendItem = item.isWeekend;
             const data = isWeekendItem ? weekendStockData : stockData;
-            
-            // GUNAKAN NAME LANGSUNG UNTUK KUNCI (SIMPLIFIED)
             const keyToCheck = item.name.trim(); 
             
-            const isAvailable = (data[keyToCheck] !== false);
+            // Ambil nilai stok, jika null (baru) berarti Unlimited (tampilkan placeholder kosong)
+            // Jika 0 berarti Habis.
+            const currentStock = (data[keyToCheck] !== undefined) ? data[keyToCheck] : "";
 
             const div = document.createElement('div');
             div.className = 'stock-item';
-            // NOTE: Switch Individual ada di bawah (label class="switch")
             div.innerHTML = `
                 <div class="item-info">
                     <h4>${item.name}</h4>
                 </div>
-                <label class="switch">
-                    <input type="checkbox" ${isAvailable ? 'checked' : ''}>
-                    <span class="slider"></span>
-                </label>
+                <div class="stock-control-wrapper">
+                    <input type="number" class="stock-input" id="stock-${keyToCheck.replace(/\s/g, '-')}" value="${currentStock}" placeholder="∞" min="0">
+                    <button class="btn-save-stock" onclick="saveStock('${keyToCheck}', ${isWeekendItem})">SIMPAN</button>
+                </div>
             `;
-            
-            const checkbox = div.querySelector('input');
-            // ADD EVENT LISTENER UNTUK SWITCH INDIVIDUAL
-            checkbox.addEventListener('change', () => toggleStock(keyToCheck, isWeekendItem, checkbox));
-
             return div;
         }
 
-        // --- SEARCH FUNCTIONALITY ---
-        const searchInput = document.getElementById('adminSearchInput');
-        searchInput.addEventListener('keyup', (e) => {
-            filterStockList(e.target.value);
-        });
-
-        function filterStockList(term) {
-            const lowerTerm = term.toLowerCase().trim();
+        function saveStock(itemName, isWeekend) {
+            const cleanName = itemName.replace(/\s/g, '-');
+            const input = document.getElementById(`stock-${cleanName}`);
+            let val = input.value.trim();
             
-            const isDailyTab = document.getElementById('tab-daily').style.display === 'block';
-            const isWeekendTab = document.getElementById('tab-weekend').style.display === 'block';
+            let newValue = null; // Default unlimited
+            if (val !== "") {
+                newValue = parseInt(val);
+                if (isNaN(newValue)) newValue = 0;
+            }
 
-            if(!isDailyTab && !isWeekendTab) return; 
-
-            const containerId = isDailyTab ? 'dailyStockList' : 'weekendStockList';
-            const container = document.getElementById(containerId);
-            const items = container.querySelectorAll('.stock-item');
-            const headers = container.querySelectorAll('.category-label');
-
-            items.forEach(item => {
-                const name = item.querySelector('h4').innerText.toLowerCase().trim();
-                if(name.includes(lowerTerm)) {
-                    item.style.display = 'flex';
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-
-            headers.forEach(header => {
-                let hasVisibleItem = false;
-                let nextElement = header.nextElementSibling;
-                
-                while(nextElement) {
-                    if(nextElement.classList.contains('category-label')) break; 
-                    if(nextElement.classList.contains('stock-item') && nextElement.style.display !== 'none') {
-                        hasVisibleItem = true;
-                        break;
-                    }
-                    nextElement = nextElement.nextElementSibling;
-                }
-
-                header.style.display = hasVisibleItem ? 'block' : 'none';
+            const path = isWeekend ? 'bubur_grace/weekendStock/' : 'bubur_grace/stock/';
+            db.ref(path + itemName).set(newValue, (error) => {
+                if(error) showToast("Gagal menyimpan!", "error");
+                else showToast("Stok diupdate");
             });
         }
 
-
-        // --- ACTIONS ---
         function switchTab(tabName) {
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
             event.currentTarget.classList.add('active');
-
             document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
-            
             document.getElementById(`tab-${tabName}`).style.display = 'block';
-
-            const searchContainer = document.getElementById('searchContainer');
-            if(tabName === 'status') {
-                searchContainer.style.display = 'none';
-            } else {
-                searchContainer.style.display = 'block';
-                if(searchInput.value) filterStockList(searchInput.value);
-            }
         }
 
         function setStoreStatus(mode) {
@@ -739,61 +657,6 @@
                 storeStatusMode = mode;
                 updateStatusUI();
                 showToast(`Mode diubah ke: ${mode.toUpperCase()}`);
-            }
-        }
-
-        // --- FUNGSI MASTER SWITCH (NEW) ---
-        function masterSwitch(type, status) {
-            if(!confirm(`Yakin ingin mengatur SEMUA item di tab ini menjadi ${status ? 'READY' : 'HABIS'}?`)) return;
-
-            const isWeekend = (type === 'weekend');
-            const itemsToUpdate = menuItems.filter(i => i.isWeekend === isWeekend);
-            
-            // Build update object for efficiency
-            const updateObj = {};
-            itemsToUpdate.forEach(item => {
-                updateObj[item.name] = status;
-            });
-
-            const path = isWeekend ? 'bubur_grace/weekendStock' : 'bubur_grace/stock';
-
-            if(db) {
-                db.ref(path).update(updateObj, (error) => {
-                    if(error) {
-                        console.error("Master Switch Error:", error);
-                        showToast("Gagal Update!", "error");
-                    } else {
-                        showToast(`Berhasil: ${itemsToUpdate.length} item diubah`);
-                    }
-                });
-            }
-        }
-
-        // --- FUNGSI UPDATE STOK INDIVIDUAL (FINAL FIX) ---
-        function toggleStock(itemName, isWeekend, checkboxElement) {
-            // DEBUGGING: Buka Console (F12) untuk melihat log ini
-            console.log(">>> DEBUG STOCK <<<");
-            console.log("Nama Item:", itemName);
-            console.log("Status Checkbox:", checkboxElement.checked);
-            
-            const newData = checkboxElement.checked; 
-            const path = isWeekend ? 'bubur_grace/weekendStock/' : 'bubur_grace/stock/';
-            const fullPath = path + itemName;
-            
-            console.log("Path Firebase:", fullPath);
-            console.log("Value to set:", newData);
-            
-            if(db) {
-                db.ref(fullPath).set(newData, (error) => {
-                    if(error) {
-                        console.error("Firebase Write Error:", error);
-                        showToast("Gagal menyimpan!", "error");
-                        checkboxElement.checked = !newData; 
-                    } else {
-                        console.log("Firebase Write Success");
-                        showToast(newData ? "Stok Tersedia" : "Stok Habis");
-                    }
-                });
             }
         }
 
@@ -808,7 +671,6 @@
         document.getElementById('adminPassword').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') attemptLogin();
         });
-
     </script>
 </body>
 </html>
