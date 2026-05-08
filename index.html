@@ -152,7 +152,7 @@
         .status-opt.active-green { border-color: var(--success); background: #ECFDF5; }
         .status-opt.active-red { border-color: var(--danger); background: #FEF2F2; }
 
-        /* --- STOCK CONTROL WRAPPER (PERUBAHAN) --- */
+        /* --- STOCK CONTROL WRAPPER --- */
         .stock-category-group { margin-bottom: 30px; }
         .category-label {
             font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;
@@ -602,7 +602,7 @@
             });
         }
 
-        // --- UPDATE STOCK ITEM UI (NUMERIC INPUT) ---
+        // --- UPDATE STOCK ITEM UI (NUMERIC INPUT) --- */
         function createStockItem(item) {
             const isWeekendItem = item.isWeekend;
             const data = isWeekendItem ? weekendStockData : stockData;
@@ -610,6 +610,7 @@
             
             // Ambil nilai stok, jika null (baru) berarti Unlimited (tampilkan placeholder kosong)
             // Jika 0 berarti Habis.
+            // PERBAIKAN SYNTAX: data[keyToCheck] bukan data[keyToCheck]
             const currentStock = (data[keyToCheck] !== undefined) ? data[keyToCheck] : "";
 
             const div = document.createElement('div');
@@ -620,7 +621,7 @@
                 </div>
                 <div class="stock-control-wrapper">
                     <input type="number" class="stock-input" id="stock-${keyToCheck.replace(/\s/g, '-')}" value="${currentStock}" placeholder="∞" min="0">
-                    <button class="btn-save-stock" onclick="saveStock('${keyToCheck}', ${isWeekendItem})">SIMPAN</button>
+                    <button class="btn-save-stock" onclick="saveStock('${item.name}', ${isWeekendItem})">SIMPAN</button>
                 </div>
             `;
             return div;
@@ -661,7 +662,7 @@
         }
 
         function showToast(msg, type="success") {
-            const t = document.getElementById('toast');
+            const t = document.getElementById("toast");
             t.innerText = msg;
             t.style.background = type === "error" ? "#EF4444" : "#333";
             t.className = "show";
