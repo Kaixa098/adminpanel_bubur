@@ -286,7 +286,7 @@
 
         /* Responsive */
         @media (max-width: 600px) {
-            .status-options { grid-template-columns: 1fr; }
+            .status-options { grid-template-columns:1fr; }
             .nav-tab { padding: 15px 10px; font-size: 0.9rem; }
             .stats-grid { grid-template-columns: 1fr 1fr; }
         }
@@ -548,9 +548,8 @@
             { name: "Koffie Susu GRace", category: "Minuman", isWeekend: false },
             { name: "Koffie Latte GRace", category: "Minuman", isWeekend: false },
             { name: "Jeruk Murni", category: "Minuman", isWeekend: false },
-            { name: "Teh Tawar", category: "Minuman", isWeekend: false },
-            { name: "Teh Manis", category: "Minuman", isWeekend: false },
-            { name: "Es Teh", category: "Minuman", isWeekend: false },
+            { name: "Teh Tawar Panas", category: "Minuman", isWeekend: false },
+            { name: "Teh Manis Panas", category: "Minuman", isWeekend: false },
             { name: "Aqua Botol", category: "Minuman", isWeekend: false },
             { name: "S-tee", category: "Minuman", isWeekend: false },
             { name: "Extra Es Batu", category: "Minuman", isWeekend: false },
@@ -717,7 +716,7 @@
             document.getElementById('statTop').innerText = topMenu !== "-" ? topMenu + ` (${maxCount})` : "-";
         }
 
-        // --- RESET STATS FUNCTION (UPDATED) ---
+        // --- RESET STATS FUNCTION ---
         function resetDailyStats() {
             // Peringatan ganda karena ini akan menghapus data riwayat hari ini
             if(confirm("Tindakan ini akan mereset Omset ke Rp 0 DAN menghapus SEMUA daftar pesanan yang tercatat hari ini.\n\nAnda yakin ingin membersihkan dashboard untuk hari ini?")) {
