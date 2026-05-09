@@ -91,7 +91,7 @@
 
         /* --- TABS --- */
         .nav-tabs {
-            background: white; display: flex; border-bottom:1px solid var(--border);
+            background: white; display: flex; border-bottom: 1px solid var(--border);
             padding: 0 10px; overflow-x: auto; flex-shrink: 0;
         }
         .nav-tab {
@@ -144,7 +144,7 @@
 
         /* --- SEARCH BAR --- */
         .search-container {
-            margin-bottom:20px;
+            margin-bottom: 20px;
             position: sticky; top: 0; z-index: 10;
             background: var(--bg-body); padding-bottom:5px;
         }
@@ -286,7 +286,7 @@
 
         /* Responsive */
         @media (max-width: 600px) {
-            .status-options { grid-template-columns:1fr; }
+            .status-options { grid-template-columns: 1fr; }
             .nav-tab { padding: 15px 10px; font-size: 0.9rem; }
             .stats-grid { grid-template-columns: 1fr 1fr; }
         }
@@ -399,6 +399,7 @@
                     </div>
                     <p style="font-size: 0.9rem; color: #0C4A6E;">
                         Ketik angka untuk membatasi stok. Kosongkan input untuk mengubah menjadi <strong>UNLIMITED</strong>.
+                        <br><em>Menu Nasi Uduk tidak ada di sini (cari di tab Weekend).</em>
                     </p>
                 </div>
                 <div class="search-container">
@@ -530,6 +531,7 @@
             { name: "Pangsit Goreng Isi Ayam (5 Pcs)", category: "Gorengan", isWeekend: false },
             { name: "Kulit Pangsit (3 Pcs)", category: "Gorengan", isWeekend: false },
             { name: "Kulit Pangsit Basah (10 Pcs)", category: "Gorengan", isWeekend: false },
+            { name: "Kulit Pangsit Basah (10 Pcs)", category: "Gorengan", isWeekend: false },
             { name: "Sate Ati", category: "Jajanan", isWeekend: false },
             { name: "Sate Ampela", category: "Jajanan", isWeekend: false },
             { name: "Sate Usus", category: "Jajanan", isWeekend: false },
@@ -548,9 +550,8 @@
             { name: "Koffie Susu GRace", category: "Minuman", isWeekend: false },
             { name: "Koffie Latte GRace", category: "Minuman", isWeekend: false },
             { name: "Jeruk Murni", category: "Minuman", isWeekend: false },
-            { name: "Teh Tawar Panas", category: "Minuman", isWeekend: false },
-            { name: "Teh Manis Panas", category: "Minuman", isWeekend: false },
-            { name: "Aqua Botol", category: "Minuman", isWeekend: false },
+            { name: "Teh Tawar Panas", category: "Minuman", isWeekend: false }, // ITEM BARU
+            { name: "Teh Manis Panas", category: "Minuman", isWeekend: false }, // ITEM BARU
             { name: "S-tee", category: "Minuman", isWeekend: false },
             { name: "Extra Es Batu", category: "Minuman", isWeekend: false },
         ];
@@ -734,7 +735,7 @@
                     .once('value', (snapshot) => {
                         const updates = {};
                         snapshot.forEach((child) => {
-                            updates[child.key] = null; // Tandai untuk dihapus
+                            updates[child.key] = null; 
                         });
 
                         if (Object.keys(updates).length > 0) {
@@ -931,7 +932,6 @@
             });
         }
 
-        // Filter Logic
         function filterStockList(type) {
             const searchVal = (type === 'daily' ? document.getElementById('dailySearch').value : document.getElementById('weekendSearch').value).toLowerCase();
             const container = (type === 'daily' ? document.getElementById('dailyStockList') : document.getElementById('weekendStockList'));
@@ -994,7 +994,7 @@
 
             const saveStock = () => {
                 let val = input.value.trim();
-                let newValue = null; // Default Unlimited (hapus node)
+                let newValue = null; 
                 
                 if (val !== "") {
                     newValue = parseInt(val);
