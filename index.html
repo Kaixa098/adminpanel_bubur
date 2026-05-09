@@ -91,7 +91,7 @@
 
         /* --- TABS --- */
         .nav-tabs {
-            background: white; display: flex; border-bottom: 1px solid var(--border);
+            background: white; display: flex; border-bottom:1px solid var(--border);
             padding: 0 10px; overflow-x: auto; flex-shrink: 0;
         }
         .nav-tab {
@@ -107,6 +107,40 @@
             flex-grow:1; overflow-y: auto; padding: 20px;
             max-width: 800px; width: 100%; margin: 0 auto;
         }
+
+        /* --- STATS CARDS --- */
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px; margin-bottom: 25px;
+        }
+        .stat-card {
+            background: white; padding: 20px; border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); text-align: center;
+            border: 1px solid var(--border);
+        }
+        .stat-value { font-size: 1.8rem; font-weight: 700; color: var(--primary); margin-bottom: 5px; }
+        .stat-label { font-size: 0.8rem; color: var(--text-sub); font-weight: 600; text-transform: uppercase; }
+        
+        /* Reset Button Style */
+        .btn-reset-stats {
+            width: 100%;
+            background: #FEF2F2;
+            color: var(--danger);
+            border: 1px dashed #EF4444;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        .btn-reset-stats:hover { background: #FEE2E2; border-color: #DC2626; }
 
         /* --- SEARCH BAR --- */
         .search-container {
@@ -176,18 +210,37 @@
             display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
         }
 
-        /* INPUT STOCK CONTROL */
-        .stock-control-wrapper { display: flex; align-items: center; gap: 5px; }
+        /* INPUT STOCK CONTROL - SIMPLIFIED */
+        .stock-control-wrapper { 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            background: #F9FAFB;
+            padding: 5px;
+            border-radius: 8px;
+        }
         .stock-input {
-            width: 80px; padding: 8px; border: 1px solid var(--border); border-radius: 8px;
+            width: 70px; padding: 8px; border: 1px solid var(--border); border-radius: 6px;
             text-align: center; font-weight: bold; color: var(--primary);
         }
-        .stock-input:focus { border-color: var(--primary); outline: none; }
-        .btn-save-stock {
-            background: var(--primary); color: white; border: none; padding: 8px 12px;
-            border-radius: 8px; cursor: pointer; font-size: 0.8rem; font-weight: 600;
+        .stock-input:focus { border-color: var(--primary); outline: none; background: white; }
+        
+        /* Unlimited Badge */
+        .unlimited-badge {
+            font-size: 0.65rem; 
+            font-weight: 700; 
+            color: var(--success); 
+            background: #ECFDF5; 
+            padding: 2px 6px; 
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
-        .btn-save-stock:hover { background: var(--primary-dark); }
+        
+        .stock-indicator {
+            font-size: 0.7rem; color: var(--success); opacity: 0; transition: opacity 0.3s;
+        }
+        .stock-indicator.show { opacity: 1; }
 
         /* Toast */
         #toast {
@@ -208,9 +261,34 @@
         .btn-complete { background: var(--success); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600; }
         .btn-complete:hover { background-color: #059669; }
 
+        /* Export Button */
+        .btn-export {
+            background: var(--secondary); color: white; border: none;
+            padding: 8px 16px; border-radius: 8px; font-size: 0.85rem;
+            cursor: pointer; margin-bottom: 15px; display: flex; align-items: center; gap: 5px;
+        }
+
+        /* Receipt Modal */
+        #receiptModal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 10000;
+            display: none; justify-content: center; align-items: center;
+        }
+        .receipt-content {
+            background: white; width: 300px; padding: 20px;
+            font-family: 'Courier New', Courier, monospace;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            font-size: 0.85rem;
+        }
+        .receipt-header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px; }
+        .receipt-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
+        .receipt-footer { margin-top: 15px; border-top: 1px dashed #000; padding-top: 10px; text-align: center; }
+
         /* Responsive */
         @media (max-width: 600px) {
             .status-options { grid-template-columns: 1fr; }
+            .nav-tab { padding: 15px 10px; font-size: 0.9rem; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
         }
     </style>
 </head>
@@ -245,33 +323,64 @@
         </header>
 
         <nav class="nav-tabs">
-            <div class="nav-tab active" onclick="switchTab('status')"><i class="fa-solid fa-store"></i> Status</div>
+            <div class="nav-tab active" onclick="switchTab('dashboard')"><i class="fa-solid fa-chart-line"></i> Dashboard</div>
+            <div class="nav-tab" onclick="switchTab('status')"><i class="fa-solid fa-store"></i> Status</div>
             <div class="nav-tab" onclick="switchTab('daily')"><i class="fa-solid fa-box-open"></i> Stok Harian</div>
             <div class="nav-tab" onclick="switchTab('weekend')"><i class="fa-solid fa-umbrella-beach"></i> Stok Weekend</div>
             <div class="nav-tab" onclick="switchTab('history')"><i class="fa-solid fa-clock-rotate-left"></i> Riwayat</div>
         </nav>
 
         <main id="mainContent">
+            <!-- Tab: Dashboard -->
+            <div id="tab-dashboard" class="tab-content">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="statOmset">Rp 0</div>
+                        <div class="stat-label">Omset Hari Ini</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statOrders">0</div>
+                        <div class="stat-label">Jumlah Order</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statTop" style="font-size:1.2rem; line-height:2rem;">-</div>
+                        <div class="stat-label">Menu Terlaris</div>
+                    </div>
+                </div>
+
+                <!-- TOMBOL RESET OMSET (DIUPDATE) -->
+                <button class="btn-reset-stats" onclick="resetDailyStats()">
+                    <i class="fa-solid fa-rotate-right"></i> Reset Omset & Bersihkan List
+                </button>
+
+                <div class="status-card">
+                    <div class="section-title"><i class="fa-solid fa-bell" style="color:var(--primary);"></i> Aktivitas Terkini (Hari Ini)</div>
+                    <div id="recentActivityList" style="font-size:0.9rem; color:#555;">
+                        Memuat data...
+                    </div>
+                </div>
+            </div>
+
             <!-- Tab: Status -->
-            <div id="tab-status" class="tab-content">
+            <div id="tab-status" class="tab-content" style="display: none;">
                 <div class="status-card">
                     <div class="section-title">
                         <i class="fa-solid fa-sliders" style="color: var(--primary);"></i>
                         Atur Mode Operasional
                     </div>
                     <p style="font-size: 0.9rem; color: #666; line-height: 1.5; margin-bottom: 20px;">
-                        Kontrol status buka/tutup toko.
+                        Kontrol status buka/tutup toko. "Paksa Buka" akan mengaktifkan menu Weekend (Nasi Uduk).
                     </p>
                     <div class="status-options">
                         <div class="status-opt" id="opt-auto" onclick="setStoreStatus('auto')">
                             <i class="fa-solid fa-robot" style="font-size: 1.5rem; margin-bottom: 10px; color: #666;"></i>
                             <h4>Otomatis</h4>
-                            <span>Ikuti Jam Buka</span>
+                            <span>Ikuti Jam & Hari</span>
                         </div>
                         <div class="status-opt" id="opt-open" onclick="setStoreStatus('open')">
                             <i class="fa-solid fa-store" style="font-size: 1.5rem; margin-bottom: 10px; color: var(--success);"></i>
                             <h4>Paksa Buka</h4>
-                            <span>Termasuk Nasi Uduk</span>
+                            <span>Buka + Menu Weekend</span>
                         </div>
                         <div class="status-opt" id="opt-close" onclick="setStoreStatus('close')">
                             <i class="fa-solid fa-store-slash" style="font-size: 1.5rem; margin-bottom: 10px; color: var(--danger);"></i>
@@ -286,11 +395,17 @@
             <div id="tab-daily" class="tab-content" style="display: none;">
                 <div class="status-card" style="background: #F0F9FF; border: 1px solid #BAE6FD;">
                     <div class="section-title" style="color: #0369A1;">
-                        <i class="fa-solid fa-boxes-stacked"></i> Atur Stok (Jumlah)
+                        <i class="fa-solid fa-boxes-stacked"></i> Atur Stok Harian
                     </div>
                     <p style="font-size: 0.9rem; color: #0C4A6E;">
-                        Masukkan jumlah stok fisik. Jika dikosongkan, dianggap stok <strong>Unlimited (Selalu Tersedia)</strong>.
+                        Ketik angka untuk membatasi stok. Kosongkan input untuk mengubah menjadi <strong>UNLIMITED</strong>.
                     </p>
+                </div>
+                <div class="search-container">
+                    <div class="search-wrapper">
+                        <i class="fa-solid fa-search"></i>
+                        <input type="text" id="dailySearch" placeholder="Cari nama menu..." onkeyup="filterStockList('daily')">
+                    </div>
                 </div>
                 <div id="dailyStockList"></div>
             </div>
@@ -301,6 +416,15 @@
                     <div class="section-title" style="color: #1E40AF;">
                         <i class="fa-solid fa-sun"></i> Stok Weekend
                     </div>
+                    <p style="font-size: 0.9rem; color: #1E3A8A;">
+                        Khusus untuk menu Nasi Uduk dan varian Ayam Goreng yang hanya jual di Weekend.
+                    </p>
+                </div>
+                <div class="search-container">
+                    <div class="search-wrapper">
+                        <i class="fa-solid fa-search"></i>
+                        <input type="text" id="weekendSearch" placeholder="Cari nama menu..." onkeyup="filterStockList('weekend')">
+                    </div>
                 </div>
                 <div id="weekendStockList"></div>
             </div>
@@ -310,11 +434,29 @@
                 <div class="section-title">
                     <i class="fa-solid fa-clock-rotate-left" style="color: var(--primary);"></i> Riwayat Pesanan Masuk
                 </div>
+                <button class="btn-export" onclick="exportToCSV()">
+                    <i class="fa-solid fa-file-csv"></i> Download Laporan (CSV)
+                </button>
                 <div id="ordersList">
                     <div class="empty-history">Memuat data pesanan...</div>
                 </div>
             </div>
         </main>
+    </div>
+
+    <!-- Receipt Modal -->
+    <div id="receiptModal" onclick="this.style.display='none'">
+        <div class="receipt-content" onclick="event.stopPropagation()">
+            <div class="receipt-header">
+                <h3>BUBUR GRACE</h3>
+                <p>Citra Rasa Istimewa</p>
+            </div>
+            <div id="receiptBody"></div>
+            <div class="receipt-footer">
+                <p>Terima Kasih!</p>
+                <button onclick="document.getElementById('receiptModal').style.display='none'" style="margin-top:10px; padding:5px 10px;">Tutup</button>
+            </div>
+        </div>
     </div>
 
     <div id="toast">Berhasil disimpan</div>
@@ -409,7 +551,7 @@
             { name: "Teh Tawar", category: "Minuman", isWeekend: false },
             { name: "Teh Manis", category: "Minuman", isWeekend: false },
             { name: "Es Teh", category: "Minuman", isWeekend: false },
-            { name: "Aqua Botol", category: "minuman", isWeekend: false },
+            { name: "Aqua Botol", category: "Minuman", isWeekend: false },
             { name: "S-tee", category: "Minuman", isWeekend: false },
             { name: "Extra Es Batu", category: "Minuman", isWeekend: false },
         ];
@@ -426,6 +568,7 @@
         let storeStatusMode = 'auto';
         let stockData = {}; 
         let weekendStockData = {}; 
+        let allOrdersData = {}; 
 
         // --- LOGIN LOGIC ---
         function attemptLogin() {
@@ -450,7 +593,6 @@
             try {
                 firebase.initializeApp(firebaseConfig);
                 db = firebase.database();
-                console.log("Firebase initialized successfully");
                 
                 //1. Listen Status
                 db.ref('bubur_grace/status').on('value', (snapshot) => {
@@ -475,7 +617,19 @@
                     renderStockLists();
                 });
 
-                // 4. LISTEN HISTORY PESANAN
+                // 4. LISTEN DAILY STATS (PERSISTENT OMSET)
+                db.ref('bubur_grace/daily_stats').on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    if(data) {
+                        document.getElementById('statOmset').innerText = formatRupiah(data.total || 0);
+                        document.getElementById('statOrders').innerText = data.count || 0;
+                    } else {
+                        document.getElementById('statOmset').innerText = "Rp 0";
+                        document.getElementById('statOrders').innerText = "0";
+                    }
+                });
+
+                // 5. LISTEN HISTORY PESANAN
                 listenForOrders();
 
                 renderStockLists();
@@ -486,60 +640,173 @@
             }
         }
 
-        // --- HISTORY LOGIC ---
+        // --- DASHBOARD STATS LOGIC ---
         function listenForOrders() {
-            const ordersContainer = document.getElementById('ordersList');
-            db.ref('bubur_grace/orders').limitToLast(50).on('value', (snapshot) => {
+            db.ref('bubur_grace/orders').limitToLast(100).on('value', (snapshot) => {
                 const data = snapshot.val();
-                ordersContainer.innerHTML = '';
+                allOrdersData = data || {};
+                updateDashboardRecentActivity(data);
+                calculateTopMenu(data); 
+                renderHistoryList(data);
+            });
+        }
+
+        // --- UPDATE DASHBOARD ---
+        function updateDashboardRecentActivity(data) {
+            const recentContainer = document.getElementById('recentActivityList');
+            recentContainer.innerHTML = "";
+            
+            if(!data) {
+                recentContainer.innerHTML = "<p>Belum ada aktivitas hari ini.</p>";
+                return;
+            }
+
+            // FILTER: Hanya ambil order HARI INI
+            const now = new Date();
+            const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+            
+            const todaysOrders = Object.entries(data).filter(([key, order]) => order.timestamp >= startOfDay);
+            
+            if(todaysOrders.length === 0) {
+                recentContainer.innerHTML = "<p>Belum ada aktivitas hari ini.</p>";
+                return;
+            }
+
+            // Ambil 3 terakhir hari ini
+            const recentOrders = todaysOrders.reverse().slice(0, 3);
+
+            recentOrders.forEach(([key, order]) => {
+                const div = document.createElement('div');
+                div.style.padding = "10px";
+                div.style.borderBottom = "1px solid #eee";
+                const time = new Date(order.timestamp).toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
+                div.innerHTML = `<strong>${time}</strong> - ${order.customerInfo} (${formatRupiah(order.total)})`;
+                recentContainer.appendChild(div);
+            });
+        }
+
+        function calculateTopMenu(data) {
+            if (!data) return;
+
+            const now = new Date();
+            const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+            
+            let itemCounts = {};
+            const orders = Object.entries(data);
+
+            // Hanya hitung order hari ini
+            orders.forEach(([key, order]) => {
+                if (order.timestamp && order.timestamp >= startOfDay) {
+                    if(order.items) {
+                        order.items.forEach(item => {
+                            const name = item.name.split('(')[0].trim(); 
+                            itemCounts[name] = (itemCounts[name] || 0) + item.qty;
+                        });
+                    }
+                }
+            });
+
+            let topMenu = "-";
+            let maxCount = 0;
+            for (const [name, count] of Object.entries(itemCounts)) {
+                if (count > maxCount) {
+                    maxCount = count;
+                    topMenu = name;
+                }
+            }
+            document.getElementById('statTop').innerText = topMenu !== "-" ? topMenu + ` (${maxCount})` : "-";
+        }
+
+        // --- RESET STATS FUNCTION (UPDATED) ---
+        function resetDailyStats() {
+            // Peringatan ganda karena ini akan menghapus data riwayat hari ini
+            if(confirm("Tindakan ini akan mereset Omset ke Rp 0 DAN menghapus SEMUA daftar pesanan yang tercatat hari ini.\n\nAnda yakin ingin membersihkan dashboard untuk hari ini?")) {
                 
-                if(!data) {
-                    ordersContainer.innerHTML = '<div class="empty-history">Belum ada pesanan masuk.</div>';
-                    return;
+                const now = new Date();
+                const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+
+                // 1. Reset Omset
+                db.ref('bubur_grace/daily_stats').set({ total: 0, count: 0 });
+
+                // 2. Cari dan Hapus Pesanan Hari Ini
+                db.ref('bubur_grace/orders')
+                    .orderByChild('timestamp')
+                    .startAt(startOfDay)
+                    .once('value', (snapshot) => {
+                        const updates = {};
+                        snapshot.forEach((child) => {
+                            updates[child.key] = null; // Tandai untuk dihapus
+                        });
+
+                        if (Object.keys(updates).length > 0) {
+                            db.ref('bubur_grace/orders').update(updates)
+                            .then(() => {
+                                showToast("Omset & Riwayat Hari Ini berhasil di-reset");
+                            })
+                            .catch((err) => {
+                                showToast("Gagal menghapus riwayat", "error");
+                            });
+                        } else {
+                            showToast("Omset di-reset (Tidak ada riwayat hari ini)");
+                        }
+                    });
+            }
+        }
+
+        // --- HISTORY LOGIC ---
+        function renderHistoryList(data) {
+            const ordersContainer = document.getElementById('ordersList');
+            ordersContainer.innerHTML = '';
+            
+            if(!data) {
+                ordersContainer.innerHTML = '<div class="empty-history">Belum ada pesanan masuk.</div>';
+                return;
+            }
+
+            const orders = Object.entries(data).reverse();
+
+            orders.forEach(([key, order]) => {
+                const date = new Date(order.timestamp);
+                const timeStr = date.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
+                const dateStr = date.toLocaleDateString('id-ID', {day: 'numeric', month: 'short'});
+
+                let statusBadge = '';
+                let actionButtons = '';
+
+                if (order.status === 'waiting_payment') {
+                    statusBadge = `<span style="color: #F59E0B; font-weight:bold; font-size: 0.8rem; background: #FEF3C7; padding: 2px 6px; border-radius: 4px;">Menunggu Bayar</span>`;
+                    actionButtons = `<button class="btn-complete" onclick="updateOrderStatus('${key}', 'paid')" style="background: var(--success);"><i class="fa-solid fa-check"></i> Terima</button>`;
+                } else if (order.status === 'paid') {
+                    statusBadge = `<span style="color: var(--success); font-weight:bold; font-size: 0.8rem; background: #ECFDF5; padding: 2px 6px; border-radius: 4px;">LUNAS</span>`;
+                    actionButtons = `<button class="btn-complete" onclick="completeOrder('${key}')"><i class="fa-solid fa-check-double"></i> Selesai</button>`;
+                } else {
+                    statusBadge = `<span style="color: var(--primary); font-weight:bold; font-size: 0.8rem; background: #FFF7ED; padding: 2px 6px; border-radius: 4px;">COD / WA</span>`;
+                    actionButtons = `
+                        <button class="btn-complete" onclick="viewReceipt('${key}')"><i class="fa-solid fa-print"></i> Struk</button>
+                        <button class="btn-complete" onclick="completeOrder('${key}')"><i class="fa-solid fa-check"></i> Selesai</button>
+                    `;
                 }
 
-                const orders = Object.entries(data).reverse();
-
-                orders.forEach(([key, order]) => {
-                    const date = new Date(order.timestamp);
-                    const timeStr = date.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
-                    const dateStr = date.toLocaleDateString('id-ID', {day: 'numeric', month: 'short'});
-
-                    let statusBadge = '';
-                    let actionButtons = '';
-
-                    if (order.status === 'waiting_payment') {
-                        statusBadge = `<span style="color: #F59E0B; font-weight:bold; font-size: 0.8rem; background: #FEF3C7; padding: 2px 6px; border-radius: 4px;">Menunggu Bayar</span>`;
-                        actionButtons = `<button class="btn-save-stock" onclick="updateOrderStatus('${key}', 'paid')" style="background: var(--success);"><i class="fa-solid fa-check"></i> Terima</button>`;
-                    } else if (order.status === 'paid') {
-                        statusBadge = `<span style="color: var(--success); font-weight:bold; font-size: 0.8rem; background: #ECFDF5; padding: 2px 6px; border-radius: 4px;">LUNAS</span>`;
-                        actionButtons = `<button class="btn-save-stock" onclick="completeOrder('${key}')"><i class="fa-solid fa-check-double"></i> Selesai</button>`;
-                    } else {
-                        statusBadge = `<span style="color: var(--primary); font-weight:bold; font-size: 0.8rem; background: #FFF7ED; padding: 2px 6px; border-radius: 4px;">COD / WA</span>`;
-                        actionButtons = `<button class="btn-save-stock" onclick="completeOrder('${key}')"><i class="fa-solid fa-check"></i> Selesai</button>`;
-                    }
-
-                    let itemsHtml = '';
-                    order.items.forEach(item => {
-                        itemsHtml += `<div>- ${item.name} (${item.qty}x) ${item.notes ? `<small style='color:#d35400'>*${item.notes}</small>` : ''}</div>`;
-                    });
-
-                    const card = document.createElement('div');
-                    card.style.background = "white"; card.style.borderRadius = "12px"; card.style.padding = "15px"; card.style.marginBottom = "15px"; card.style.border = "1px solid var(--border)";
-                    card.innerHTML = `
-                        <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px dashed #eee; padding-bottom:10px;">
-                            <div><strong>#${key.slice(-6).toUpperCase()}</strong><br><small style="color:#888">${dateStr}, ${timeStr}</small></div>
-                            <div style="background:#FFF7ED; color:var(--primary); padding:4px 8px; border-radius:4px; font-weight:600;">${order.customerInfo}</div>
-                        </div>
-                        <div style="margin-bottom:10px;">${statusBadge}</div>
-                        <div style="font-size:0.85rem; color:#555; margin-bottom:10px;">${itemsHtml}</div>
-                        <div style="display:flex; justify-content:space-between; align-items:center; background:#F9FAFB; padding:10px; border-radius:8px;">
-                            <div style="font-weight:700;">Total: ${formatRupiah(order.total)}</div>
-                            ${actionButtons}
-                        </div>
-                    `;
-                    ordersContainer.appendChild(card);
+                let itemsHtml = '';
+                order.items.forEach(item => {
+                    itemsHtml += `<div>- ${item.name} (${item.qty}x) ${item.notes ? `<small style='color:#d35400'>*${item.notes}</small>` : ''}</div>`;
                 });
+
+                const card = document.createElement('div');
+                card.style.background = "white"; card.style.borderRadius = "12px"; card.style.padding = "15px"; card.style.marginBottom = "15px"; card.style.border = "1px solid var(--border)";
+                card.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px dashed #eee; padding-bottom:10px;">
+                        <div><strong>#${key.slice(-6).toUpperCase()}</strong><br><small style="color:#888">${dateStr}, ${timeStr}</small></div>
+                        <div style="background:#FFF7ED; color:var(--primary); padding:4px 8px; border-radius:4px; font-weight:600;">${order.customerInfo}</div>
+                    </div>
+                    <div style="margin-bottom:10px;">${statusBadge}</div>
+                    <div style="font-size:0.85rem; color:#555; margin-bottom:10px;">${itemsHtml}</div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:#F9FAFB; padding:10px; border-radius:8px;">
+                        <div style="font-weight:700;">Total: ${formatRupiah(order.total)}</div>
+                        <div style="display:flex; gap:5px;">${actionButtons}</div>
+                    </div>
+                `;
+                ordersContainer.appendChild(card);
             });
         }
 
@@ -556,6 +823,69 @@
                 .then(() => showToast("Status Diperbarui"))
                 .catch((err) => showToast("Gagal update status", "error"));
             }
+        }
+
+        // Receipt View
+        function viewReceipt(key) {
+            const order = allOrdersData[key];
+            if(!order) return;
+
+            const modal = document.getElementById('receiptModal');
+            const body = document.getElementById('receiptBody');
+            const date = new Date(order.timestamp).toLocaleString('id-ID');
+
+            let itemsHtml = '';
+            order.items.forEach(item => {
+                itemsHtml += `
+                    <div class="receipt-row">
+                        <span>${item.name} x${item.qty}</span>
+                        <span>${formatRupiah(item.price * item.qty)}</span>
+                    </div>
+                `;
+            });
+
+            body.innerHTML = `
+                <div style="margin-bottom:10px;">No: #${key.slice(-6).toUpperCase()}</div>
+                <div style="margin-bottom:10px;">Waktu: ${date}</div>
+                <div style="margin-bottom:10px; font-weight:bold;">Pelanggan: ${order.customerInfo}</div>
+                <div style="border-bottom:1px dashed #000; margin-bottom:10px;"></div>
+                ${itemsHtml}
+                <div style="border-top:1px dashed #000; margin-top:10px; padding-top:10px;" class="receipt-row">
+                    <strong>TOTAL</strong>
+                    <strong>${formatRupiah(order.total)}</strong>
+                </div>
+            `;
+            modal.style.display = 'flex';
+        }
+
+        // Export to CSV
+        function exportToCSV() {
+            if(!allOrdersData || Object.keys(allOrdersData).length === 0) {
+                alert("Tidak ada data untuk diexport.");
+                return;
+            }
+
+            const orders = Object.entries(allOrdersData).reverse();
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Order ID,Tanggal,Jam,Customer,Total,Status,Items\n";
+
+            orders.forEach(([key, order]) => {
+                const date = new Date(order.timestamp);
+                const dateStr = date.toLocaleDateString('id-ID');
+                const timeStr = date.toLocaleTimeString('id-ID');
+                
+                const itemsStr = order.items.map(i => `${i.name} (${i.qty})`).join('; ');
+
+                csvContent += `"${key.slice(-6).toUpperCase()}","${dateStr}","${timeStr}","${order.customerInfo}","${order.total}","${order.status}","${itemsStr}"\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "Laporan_Pen_BuburGrace.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         function formatRupiah(number) {
@@ -602,47 +932,98 @@
             });
         }
 
-        // --- UPDATE STOCK ITEM UI (NUMERIC INPUT) --- */
+        // Filter Logic
+        function filterStockList(type) {
+            const searchVal = (type === 'daily' ? document.getElementById('dailySearch').value : document.getElementById('weekendSearch').value).toLowerCase();
+            const container = (type === 'daily' ? document.getElementById('dailyStockList') : document.getElementById('weekendStockList'));
+            const items = container.querySelectorAll('.stock-item');
+            const labels = container.querySelectorAll('.category-label');
+
+            items.forEach(item => {
+                const name = item.querySelector('.item-info h4').innerText.toLowerCase();
+                if(name.includes(searchVal)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            labels.forEach(label => {
+                let next = label.nextElementSibling;
+                let hasVisible = false;
+                while(next && next.classList.contains('stock-item')) {
+                    if(next.style.display !== 'none') hasVisible = true;
+                    next = next.nextElementSibling;
+                }
+                label.style.display = hasVisible ? 'block' : 'none';
+            });
+        }
+
+        // --- CREATE STOCK ITEM (SIMPLIFIED UI) --- */
         function createStockItem(item) {
             const isWeekendItem = item.isWeekend;
             const data = isWeekendItem ? weekendStockData : stockData;
             const keyToCheck = item.name.trim(); 
             
-            // Ambil nilai stok, jika null (baru) berarti Unlimited (tampilkan placeholder kosong)
-            // Jika 0 berarti Habis.
-            // PERBAIKAN SYNTAX: data[keyToCheck] bukan data[keyToCheck]
+            // Ambil nilai stok, jika null (baru) berarti Unlimited
             const currentStock = (data[keyToCheck] !== undefined) ? data[keyToCheck] : "";
+            const isUnlimited = (currentStock === "" || currentStock === null);
 
             const div = document.createElement('div');
             div.className = 'stock-item';
+            
+            // Tampilan Badge Unlimited / Angka
+            let statusHtml = '';
+            if(isUnlimited) {
+                statusHtml = `<span class="unlimited-badge">UNLIMITED</span>`;
+            }
+
             div.innerHTML = `
                 <div class="item-info">
                     <h4>${item.name}</h4>
                 </div>
                 <div class="stock-control-wrapper">
-                    <input type="number" class="stock-input" id="stock-${keyToCheck.replace(/\s/g, '-')}" value="${currentStock}" placeholder="∞" min="0">
-                    <button class="btn-save-stock" onclick="saveStock('${item.name}', ${isWeekendItem})">SIMPAN</button>
+                    ${statusHtml}
+                    <input type="number" class="stock-input" id="stock-${keyToCheck.replace(/\s/g, '-')}" value="${!isUnlimited ? currentStock : ''}" placeholder="0" min="0">
+                    <i class="fa-solid fa-check stock-indicator" id="ind-${keyToCheck.replace(/\s/g, '-')}"></i>
                 </div>
             `;
-            return div;
-        }
 
-        function saveStock(itemName, isWeekend) {
-            const cleanName = itemName.replace(/\s/g, '-');
-            const input = document.getElementById(`stock-${cleanName}`);
-            let val = input.value.trim();
-            
-            let newValue = null; // Default unlimited
-            if (val !== "") {
-                newValue = parseInt(val);
-                if (isNaN(newValue)) newValue = 0;
-            }
+            // Auto Save Event Listeners
+            const input = div.querySelector('input');
+            const indicator = div.querySelector('.stock-indicator');
 
-            const path = isWeekend ? 'bubur_grace/weekendStock/' : 'bubur_grace/stock/';
-            db.ref(path + itemName).set(newValue, (error) => {
-                if(error) showToast("Gagal menyimpan!", "error");
-                else showToast("Stok diupdate");
+            const saveStock = () => {
+                let val = input.value.trim();
+                let newValue = null; // Default Unlimited (hapus node)
+                
+                if (val !== "") {
+                    newValue = parseInt(val);
+                    if (isNaN(newValue)) newValue = 0;
+                }
+                const path = isWeekendItem ? 'bubur_grace/weekendStock/' : 'bubur_grace/stock/';
+                
+                db.ref(path + item.name).set(newValue, (error) => {
+                    if(error) {
+                        showToast("Gagal menyimpan!", "error");
+                        indicator.style.color = 'var(--danger)';
+                    } else {
+                        // Show Saved Indicator & Refresh UI for Badge Update
+                        indicator.classList.add('show');
+                        setTimeout(() => indicator.classList.remove('show'), 1500);
+                        renderStockLists();
+                    }
+                });
+            };
+
+            input.addEventListener('blur', saveStock);
+            input.addEventListener('keypress', (e) => {
+                if(e.key === 'Enter') {
+                    input.blur();
+                }
             });
+
+            return div;
         }
 
         function switchTab(tabName) {
