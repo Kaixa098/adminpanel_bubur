@@ -187,6 +187,108 @@
         .status-opt.active-green { border-color: var(--success); background: #ECFDF5; }
         .status-opt.active-red { border-color: var(--danger); background: #FEF2F2; }
 
+        /* --- GOJEK STYLE SCHEDULE CARD --- */
+        .config-card {
+            background: #FFF; border-radius: 16px; padding: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 30px;
+            border-left: 5px solid var(--primary);
+        }
+        .day-schedule-row {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .day-schedule-row:last-child { border-bottom: none; }
+        
+        .day-name {
+            width: 90px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-main);
+        }
+        
+        .time-input-group {
+            flex: 1;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding-left: 10px;
+        }
+        .time-input-group input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+        /* Disabled state for inputs when day is closed */
+        .time-input-group input:disabled {
+            background-color: #f3f4f6;
+            color: #d1d5db;
+            cursor: not-allowed;
+            border-color: transparent;
+        }
+        .time-separator {
+            color: var(--text-sub);
+            font-size: 1.2rem;
+        }
+
+        .switch-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-right: 15px;
+            width: 50px;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--success); }
+        input:checked + .slider:before { transform: translateX(20px); }
+        .status-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-sub);
+            width: 50px;
+            text-align: right;
+        }
+        input:checked ~ .status-label { color: var(--success); }
+
+        .btn-save-config {
+            width: 100%; padding: 12px; background: var(--secondary);
+            color: white; border: none; border-radius: 8px;
+            font-weight: 600; cursor: pointer; margin-top: 15px;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: 0.2s;
+        }
+        .btn-save-config:hover { background: #1a252f; }
+
         /* --- STOCK CONTROL WRAPPER --- */
         .stock-category-group { margin-bottom: 30px; }
         .category-label {
@@ -296,6 +398,9 @@
             .status-options { grid-template-columns: 1fr; }
             .nav-tab { padding: 15px 10px; font-size: 0.9rem; }
             .stats-grid { grid-template-columns: 1fr 1fr; }
+            .form-row { flex-direction: column; gap: 10px; }
+            .time-input-group { padding-left: 5px; }
+            .day-name { width: 70px; font-size: 0.8rem; }
         }
     </style>
 </head>
@@ -331,7 +436,7 @@
 
         <nav class="nav-tabs">
             <div class="nav-tab active" onclick="switchTab('dashboard')"><i class="fa-solid fa-chart-line"></i> Dashboard</div>
-            <div class="nav-tab" onclick="switchTab('status')"><i class="fa-solid fa-store"></i> Status</div>
+            <div class="nav-tab" onclick="switchTab('status')"><i class="fa-solid fa-store"></i> Status & Jam</div>
             <div class="nav-tab" onclick="switchTab('daily')"><i class="fa-solid fa-box-open"></i> Stok Harian</div>
             <div class="nav-tab" onclick="switchTab('weekend')"><i class="fa-solid fa-umbrella-beach"></i> Stok Weekend</div>
             <div class="nav-tab" onclick="switchTab('history')"><i class="fa-solid fa-clock-rotate-left"></i> Riwayat</div>
@@ -368,8 +473,9 @@
                 </div>
             </div>
 
-            <!-- Tab: Status -->
+            <!-- Tab: Status & Jam -->
             <div id="tab-status" class="tab-content" style="display: none;">
+                <!-- Bagian Mode Operasional -->
                 <div class="status-card">
                     <div class="section-title">
                         <i class="fa-solid fa-sliders" style="color: var(--primary);"></i>
@@ -395,6 +501,23 @@
                             <span>Tutup Total</span>
                         </div>
                     </div>
+                </div>
+
+                <!-- Bagian Pengaturan Jam (GOJEK STYLE) -->
+                <div class="config-card">
+                    <div class="section-title" style="margin-bottom: 20px;">
+                        <i class="fa-regular fa-clock" style="color: var(--secondary);"></i> Jam Operasional Per Hari
+                    </div>
+                    
+                    <!-- Container Hari (Generated by JS) -->
+                    <div id="scheduleContainer"></div>
+
+                    <button class="btn-save-config" onclick="saveConfig()">
+                        <i class="fa-solid fa-save"></i> Simpan Perubahan Jam
+                    </button>
+                    <p style="font-size: 0.8rem; color: #888; margin-top: 10px; text-align: center;">
+                        *Jika toggle "Buka" dimatikan, toko dianggap tutup pada hari tersebut.
+                    </p>
                 </div>
             </div>
 
@@ -472,8 +595,6 @@
 
     <script>
         // --- DATA MENU (SINKRONISASI KEY - DIHAPUS VARIAN AKHIR) ---
-        // Catatan: Varian seperti (Kecil), (Lebar), (Panas/Dingin) dihapus di sini
-        // agar match dengan logika User yang menghapus varian saat cek stok.
         const menuItems = [
             // PAKET
             { name: "Paket A (Bubur Biasa + Minuman)", category: "Paket", isWeekend: false },
@@ -616,21 +737,41 @@
                     }
                 });
 
-                //2. Listen Stock Harian
+                //2. Listen Config (NEW GOJEK STRUCTURE)
+                db.ref('bubur_grace/config').on('value', (snapshot) => {
+                    const config = snapshot.val();
+                    if(config && config.schedule) {
+                        renderScheduleUI(config.schedule);
+                    } else {
+                        // Default config jika DB kosong
+                        const defaultSchedule = {
+                            0: { isOpen: true, open: "06:00", close: "12:00" },
+                            1: { isOpen: false, open: "", close: "" }, // Senin Libur
+                            2: { isOpen: true, open: "06:00", close: "12:00" },
+                            3: { isOpen: true, open: "06:00", close: "12:00" },
+                            4: { isOpen: true, open: "06:00", close: "12:00" },
+                            5: { isOpen: true, open: "06:00", close: "12:00" },
+                            6: { isOpen: true, open: "06:00", close: "12:00" }, // Sabtu
+                        };
+                        renderScheduleUI(defaultSchedule);
+                    }
+                });
+
+                //3. Listen Stock Harian
                 db.ref('bubur_grace/stock').on('value', (snapshot) => {
                     const data = snapshot.val();
                     stockData = data || {};
                     renderStockLists();
                 });
 
-                //3. Listen Stock Weekend
+                //4. Listen Stock Weekend
                 db.ref('bubur_grace/weekendStock').on('value', (snapshot) => {
                     const data = snapshot.val();
                     weekendStockData = data || {};
                     renderStockLists();
                 });
 
-                // 4. LISTEN DAILY STATS (PERSISTENT OMSET)
+                // 5. LISTEN DAILY STATS (PERSISTENT OMSET)
                 db.ref('bubur_grace/daily_stats').on('value', (snapshot) => {
                     const data = snapshot.val();
                     if(data) {
@@ -642,7 +783,7 @@
                     }
                 });
 
-                // 5. LISTEN HISTORY PESANAN
+                // 6. LISTEN HISTORY PESANAN
                 listenForOrders();
 
                 renderStockLists();
@@ -651,6 +792,102 @@
                 alert("Gagal koneksi ke Firebase. Cek Console.");
                 console.error(e);
             }
+        }
+
+        // --- NEW: RENDER SCHEDULE UI (GOJEK STYLE) ---
+        const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+
+        function renderScheduleUI(scheduleData) {
+            const container = document.getElementById('scheduleContainer');
+            container.innerHTML = '';
+
+            for(let i=0; i<7; i++) {
+                const dayConf = scheduleData[i] || { isOpen: true, open: "06:00", close: "12:00" }; // Fallback
+                
+                const isOpen = dayConf.isOpen;
+                const checked = isOpen ? 'checked' : '';
+                const disabledAttr = isOpen ? '' : 'disabled';
+                const opacityStyle = isOpen ? '1' : '0.5';
+
+                const div = document.createElement('div');
+                div.className = 'day-schedule-row';
+                div.style.opacity = opacityStyle;
+
+                div.innerHTML = `
+                    <div class="day-name">${dayNames[i]}</div>
+                    <div class="time-input-group">
+                        <input type="time" id="time-open-${i}" value="${dayConf.open}" ${disabledAttr}>
+                        <span class="time-separator">-</span>
+                        <input type="time" id="time-close-${i}" value="${dayConf.close}" ${disabledAttr}>
+                    </div>
+                    <div class="switch-container">
+                        <label class="switch">
+                            <input type="checkbox" id="day-toggle-${i}" ${checked}>
+                            <span class="slider"></span>
+                        </label>
+                        <div class="status-label">${isOpen ? 'Buka' : 'Tutup'}</div>
+                    </div>
+                `;
+
+                container.appendChild(div);
+
+                // Add Event Listener for Toggle to enable/disable inputs immediately
+                const toggle = document.getElementById(`day-toggle-${i}`);
+                const openInput = document.getElementById(`time-open-${i}`);
+                const closeInput = document.getElementById(`time-close-${i}`);
+                const statusLabel = toggle.parentElement.nextElementSibling;
+
+                toggle.addEventListener('change', () => {
+                    const isChecked = toggle.checked;
+                    if(isChecked) {
+                        openInput.disabled = false;
+                        closeInput.disabled = false;
+                        openInput.value = "06:00";
+                        closeInput.value = "12:00";
+                        statusLabel.innerText = "Buka";
+                    } else {
+                        openInput.disabled = true;
+                        closeInput.disabled = true;
+                        openInput.value = "";
+                        closeInput.value = "";
+                        statusLabel.innerText = "Tutup";
+                    }
+                });
+            }
+        }
+
+        // --- NEW: SAVE CONFIG (GOJEK STYLE) ---
+        function saveConfig() {
+            const newSchedule = {};
+            
+            for(let i=0; i<7; i++) {
+                const isChecked = document.getElementById(`day-toggle-${i}`).checked;
+                
+                if(isChecked) {
+                    const openTime = document.getElementById(`time-open-${i}`).value;
+                    const closeTime = document.getElementById(`time-close-${i}`).value;
+                    
+                    newSchedule[i] = {
+                        isOpen: true,
+                        open: openTime || "06:00",
+                        close: closeTime || "12:00"
+                    };
+                } else {
+                    newSchedule[i] = {
+                        isOpen: false,
+                        open: "",
+                        close: ""
+                    };
+                }
+            }
+
+            db.ref('bubur_grace/config').set({ schedule: newSchedule }, (error) => {
+                if(error) {
+                    showToast("Gagal menyimpan!", "error");
+                } else {
+                    showToast("Jam Operasional Berhasil Disimpan!");
+                }
+            });
         }
 
         // --- DASHBOARD STATS LOGIC ---
@@ -674,7 +911,6 @@
                 return;
             }
 
-            // FILTER: Hanya ambil order HARI INI
             const now = new Date();
             const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
             
@@ -685,7 +921,6 @@
                 return;
             }
 
-            // Ambil 3 terakhir hari ini
             const recentOrders = todaysOrders.reverse().slice(0, 3);
 
             recentOrders.forEach(([key, order]) => {
@@ -707,12 +942,10 @@
             let itemCounts = {};
             const orders = Object.entries(data);
 
-            // Hanya hitung order hari ini
             orders.forEach(([key, order]) => {
                 if (order.timestamp && order.timestamp >= startOfDay) {
                     if(order.items) {
                         order.items.forEach(item => {
-                            // Bersihkan nama dari varian (misal: Mie (Kecil) -> Mie)
                             const name = item.name.split('(')[0].trim(); 
                             itemCounts[name] = (itemCounts[name] || 0) + item.qty;
                         });
@@ -733,16 +966,13 @@
 
         // --- RESET STATS FUNCTION ---
         function resetDailyStats() {
-            // Peringatan ganda karena ini akan menghapus data riwayat hari ini
             if(confirm("Tindakan ini akan mereset Omset ke Rp 0 DAN menghapus SEMUA daftar pesanan yang tercatat hari ini.\n\nAnda yakin ingin membersihkan dashboard untuk hari ini?")) {
                 
                 const now = new Date();
                 const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
 
-                // 1. Reset Omset
                 db.ref('bubur_grace/daily_stats').set({ total: 0, count: 0 });
 
-                // 2. Cari dan Hapus Pesanan Hari Ini
                 db.ref('bubur_grace/orders')
                     .orderByChild('timestamp')
                     .startAt(startOfDay)
@@ -754,12 +984,8 @@
 
                         if (Object.keys(updates).length > 0) {
                             db.ref('bubur_grace/orders').update(updates)
-                            .then(() => {
-                                showToast("Omset & Riwayat Hari Ini berhasil di-reset");
-                            })
-                            .catch((err) => {
-                                showToast("Gagal menghapus riwayat", "error");
-                            });
+                            .then(() => showToast("Omset & Riwayat Hari Ini berhasil di-reset"))
+                            .catch((err) => showToast("Gagal menghapus riwayat", "error"));
                         } else {
                             showToast("Omset di-reset (Tidak ada riwayat hari ini)");
                         }
@@ -810,7 +1036,7 @@
                 card.style.background = "white"; card.style.borderRadius = "12px"; card.style.padding = "15px"; card.style.marginBottom = "15px"; card.style.border = "1px solid var(--border)";
                 card.innerHTML = `
                     <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px dashed #eee; padding-bottom:10px;">
-                        <div><strong>#${key.slice(-6).toUpperCase()}</strong><br><small style="color:#888">${dateStr}, ${timeStr}</small></div>
+                        <div><strong>#${key.slice(-6).toUpperCase()}</strong><br><small style="color:#888">${dateStr}, ${timeStr}</small></div></div>
                         <div style="background:#FFF7ED; color:var(--primary); padding:4px 8px; border-radius:4px; font-weight:600;">${order.customerInfo}</div>
                     </div>
                     <div style="margin-bottom:10px;">${statusBadge}</div>
@@ -978,22 +1204,19 @@
             const data = isWeekendItem ? weekendStockData : stockData;
             const keyToCheck = item.name.trim(); 
             
-            // Ambil nilai stok
             const currentStock = (data[keyToCheck] !== undefined) ? data[keyToCheck] : null;
             
-            // PERBAIKAN LOGIKA: 0 = Unlimited
             const isUnlimited = (currentStock === null || currentStock === undefined || currentStock === 0);
 
             const div = document.createElement('div');
             div.className = 'stock-item';
             
-            // Tampilan Badge Unlimited / Angka
             let statusHtml = '';
             let inputValue = '';
             
             if(isUnlimited) {
                 statusHtml = `<span class="unlimited-badge">UNLIMITED</span>`;
-                inputValue = ''; // Kosongkan input jika unlimited
+                inputValue = ''; 
             } else {
                 inputValue = currentStock;
             }
@@ -1009,7 +1232,6 @@
                 </div>
             `;
 
-            // Auto Save Event Listeners
             const input = div.querySelector('input');
             const indicator = div.querySelector('.stock-indicator');
 
@@ -1017,11 +1239,8 @@
                 let val = input.value.trim();
                 let newValue = null; 
                 
-                // PERBAIKAN: Jika dikosongkan, simpan null (Unlimited)
-                // Jika diisi 0, simpan 0 (Unlimited)
                 if (val !== "") {
                     newValue = parseInt(val);
-                    // Validasi: Tidak boleh negatif
                     if (isNaN(newValue) || newValue < 0) newValue = 0;
                 }
                 
@@ -1032,10 +1251,9 @@
                         showToast("Gagal menyimpan!", "error");
                         indicator.style.color = 'var(--danger)';
                     } else {
-                        // Show Saved Indicator & Refresh UI for Badge Update
                         indicator.classList.add('show');
                         setTimeout(() => indicator.classList.remove('show'), 1500);
-                        renderStockLists(); // Re-render untuk update badge unlimited/angka
+                        renderStockLists(); 
                     }
                 });
             };
