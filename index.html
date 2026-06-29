@@ -5,15 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Admin Panel - Bubur Grace</title>
     
-    <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- FIREBASE SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <!-- FIREBASE SDK — ditambahkan crossorigin untuk menghindari block -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js" crossorigin="anonymous"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js" crossorigin="anonymous"></script>
 
     <style>
         :root {
@@ -27,8 +26,8 @@
             --danger: #EF4444;
             --border: #E5E7EB;
             --secondary: #2C3E50;
+            --warning: #F59E0B;
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; outline: none; }
         body {
             font-family: 'Inter', sans-serif;
@@ -39,7 +38,7 @@
             flex-direction: column;
         }
 
-        /* --- LOGIN SCREEN --- */
+        /* === LOGIN === */
         #loginScreen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(135deg, var(--primary), #E67E22);
@@ -50,7 +49,7 @@
         .login-card {
             background: white; padding: 40px; border-radius: 20px;
             width: 90%; max-width: 400px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
             text-align: center;
         }
         .login-logo {
@@ -61,24 +60,25 @@
             width: 100%; padding: 15px; margin: 20px 0;
             border: 2px solid var(--border); border-radius: 12px;
             font-size: 1rem; text-align: center; letter-spacing: 2px;
-            transition: 0.3s;
+            transition: 0.3s; font-family: 'Inter', sans-serif;
         }
         .login-input:focus { border-color: var(--primary); }
         .btn-login {
             width: 100%; padding: 15px; background: var(--primary);
             color: white; border: none; border-radius: 12px;
             font-size: 1rem; font-weight: 600; cursor: pointer;
-            transition: background 0.3s;
+            transition: background 0.3s; font-family: 'Inter', sans-serif;
         }
         .btn-login:hover { background: var(--primary-dark); }
+        .btn-login:active { transform: scale(0.98); }
+        .btn-login:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
         .error-msg { color: var(--danger); font-size: 0.9rem; margin-top: 10px; min-height: 20px; }
 
-        /* --- DASHBOARD LAYOUT --- */
+        /* === DASHBOARD === */
         #dashboardScreen { display: none; height: 100%; flex-direction: column; }
-        
-        header {
+        .admin-header {
             background: white; padding: 15px 20px;
-            border-bottom:1px solid var(--border);
+            border-bottom: 1px solid var(--border);
             display: flex; justify-content: space-between; align-items: center;
             flex-shrink: 0;
         }
@@ -87,29 +87,30 @@
         .btn-logout {
             background: #FEE2E2; color: var(--danger); border: none;
             padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer;
-            display: flex; align-items: center; gap: 5px;
+            display: flex; align-items: center; gap: 5px; font-family: 'Inter', sans-serif;
         }
+        .btn-logout:hover { background: #FECACA; }
 
-        /* --- TABS --- */
+        /* === TABS === */
         .nav-tabs {
             background: white; display: flex; border-bottom: 1px solid var(--border);
             padding: 0 10px; overflow-x: auto; flex-shrink: 0;
         }
+        .nav-tabs::-webkit-scrollbar { display: none; }
         .nav-tab {
-            padding: 15px 20px; font-weight: 500; color: var(--text-sub);
+            padding: 14px 18px; font-weight: 500; color: var(--text-sub);
             border-bottom: 3px solid transparent; cursor: pointer; white-space: nowrap;
-            transition: 0.3s;
+            transition: 0.3s; font-size: 0.92rem; user-select: none;
         }
         .nav-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
-        .nav-tab i { margin-right: 8px; }
+        .nav-tab i { margin-right: 6px; }
 
-        /* --- MAIN CONTENT --- */
-        main {
-            flex-grow:1; overflow-y: auto; padding: 20px;
+        .admin-main {
+            flex-grow: 1; overflow-y: auto; padding: 20px;
             max-width: 800px; width: 100%; margin: 0 auto;
         }
 
-        /* --- STATS CARDS --- */
+        /* === STATS === */
         .stats-grid {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 15px; margin-bottom: 25px;
@@ -121,1180 +122,1018 @@
         }
         .stat-value { font-size: 1.8rem; font-weight: 700; color: var(--primary); margin-bottom: 5px; }
         .stat-label { font-size: 0.8rem; color: var(--text-sub); font-weight: 600; text-transform: uppercase; }
-        
-        /* Reset Button Style */
         .btn-reset-stats {
-            width: 100%;
-            background: #FEF2F2;
-            color: var(--danger);
-            border: 1px dashed #EF4444;
-            padding: 10px;
-            border-radius: 10px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 10px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: all 0.2s;
+            width: 100%; background: #FEF2F2; color: var(--danger);
+            border: 1px dashed #EF4444; padding: 10px; border-radius: 10px;
+            font-size: 0.9rem; font-weight: 600; cursor: pointer; margin-top: 10px; margin-bottom: 20px;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            font-family: 'Inter', sans-serif;
         }
-        .btn-reset-stats:hover { background: #FEE2E2; border-color: #DC2626; }
 
-        /* --- SEARCH BAR --- */
+        /* === SEARCH === */
         .search-container {
-            margin-bottom: 20px;
-            position: sticky; top: 0; z-index: 10;
-            background: var(--bg-body); padding-bottom:5px;
+            margin-bottom: 20px; position: sticky; top: 0; z-index: 10;
+            background: var(--bg-body); padding-bottom: 5px;
         }
         .search-wrapper {
-            display: flex; align-items: center;
-            background: white; border:1px solid var(--border);
-            border-radius: 12px; padding: 0 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            transition: 0.2s;
+            display: flex; align-items: center; background: white; border: 1px solid var(--border);
+            border-radius: 12px; padding: 0 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
-        .search-wrapper:focus-within { border-color: var(--primary); box-shadow: 0 4px 12px rgba(211, 84, 0, 0.15); }
+        .search-wrapper:focus-within { border-color: var(--primary); box-shadow: 0 4px 12px rgba(211,84,0,0.15); }
         .search-wrapper i { color: #9CA3AF; margin-right: 10px; }
-        .search-wrapper input {
-            border: none; width: 100%; padding: 14px 0;
-            font-size: 1rem; font-family: 'Inter', sans-serif;
-        }
+        .search-wrapper input { border: none; width: 100%; padding: 14px 0; font-size: 1rem; font-family: 'Inter', sans-serif; }
         .search-wrapper input:focus { outline: none; }
 
         .section-title {
             font-size: 1.1rem; font-weight: 700; margin-bottom: 15px;
             display: flex; align-items: center; gap: 10px; color: var(--text-main);
         }
-        
-        /* Status Card */
-        .status-card {
+
+        /* === LIVE STATUS === */
+        .live-card {
+            border-radius: 16px; padding: 20px; margin-bottom: 20px;
+            border: 2px solid var(--border); overflow: hidden;
+            position: relative; transition: border-color 0.5s, background 0.5s;
+        }
+        .live-card.card-open { border-color: #6ee7b7; background: #f0fdf4; }
+        .live-card.card-closed { border-color: #fca5a5; background: #fef2f2; }
+        .live-card.card-waiting { border-color: #fcd34d; background: #fffbeb; }
+
+        .live-card-top { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+        .live-icon-box {
+            width: 50px; height: 50px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem; flex-shrink: 0; transition: all 0.4s;
+        }
+        .live-icon-box.ic-open { background: #d1fae5; color: #059669; }
+        .live-icon-box.ic-closed { background: #fee2e2; color: #dc2626; }
+        .live-icon-box.ic-waiting { background: #fef3c7; color: #d97706; }
+
+        .live-info { flex: 1; min-width: 0; }
+        .live-label { font-size: 0.7rem; color: var(--text-sub); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .live-status { font-size: 1.15rem; font-weight: 800; margin-top: 2px; transition: color 0.4s; }
+        .live-status.s-open { color: #059669; }
+        .live-status.s-closed { color: #dc2626; }
+        .live-status.s-waiting { color: #d97706; }
+
+        .live-dot {
+            width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; transition: all 0.4s;
+        }
+        .live-dot.d-open { background: #10b981; animation: pulseDot 2s infinite; }
+        .live-dot.d-closed { background: #ef4444; }
+        .live-dot.d-waiting { background: #f59e0b; animation: pulseDotY 2s infinite; }
+        @keyframes pulseDot {
+            0% { box-shadow: 0 0 0 0 rgba(16,185,129,0.5); }
+            70% { box-shadow: 0 0 0 8px rgba(16,185,129,0); }
+            100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
+        }
+        @keyframes pulseDotY {
+            0% { box-shadow: 0 0 0 0 rgba(245,158,11,0.4); }
+            70% { box-shadow: 0 0 0 8px rgba(245,158,11,0); }
+            100% { box-shadow: 0 0 0 0 rgba(245,158,11,0); }
+        }
+
+        .live-detail {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 0.85rem; color: var(--text-sub); font-weight: 500;
+            background: rgba(255,255,255,0.7); padding: 8px 12px; border-radius: 8px;
+        }
+        .live-detail i { color: var(--primary); }
+        .live-clock {
+            margin-left: auto; font-size: 0.82rem; font-weight: 700;
+            color: var(--secondary); font-variant-numeric: tabular-nums;
+        }
+
+        /* === MODE OVERRIDE === */
+        .override-card {
             background: white; border-radius: 16px; padding: 20px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 30px;
-        }
-        .status-options {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px;
-        }
-        .status-opt {
-            border: 2px solid var(--border); border-radius: 12px; padding: 15px;
-            text-align: center; cursor: pointer; transition: 0.2s;
-        }
-        .status-opt h4 { font-size: 0.9rem; margin-bottom: 5px; }
-        .status-opt span { font-size: 0.75rem; color: var(--text-sub); }
-        .status-opt.active { border-color: var(--primary); background: #FFF7ED; }
-        .status-opt.active-green { border-color: var(--success); background: #ECFDF5; }
-        .status-opt.active-red { border-color: var(--danger); background: #FEF2F2; }
-
-        /* --- GOJEK STYLE SCHEDULE CARD --- */
-        .config-card {
-            background: #FFF; border-radius: 16px; padding: 20px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 30px;
-            border-left: 5px solid var(--primary);
-        }
-        .day-schedule-row {
-            display: flex;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid #f3f4f6;
-        }
-        .day-schedule-row:last-child { border-bottom: none; }
-        
-        .day-name {
-            width: 90px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            color: var(--text-main);
-        }
-        
-        .time-input-group {
-            flex: 1;
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            padding-left: 10px;
-        }
-        .time-input-group input {
-            flex: 1;
-            padding: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 20px;
             border: 1px solid var(--border);
-            border-radius: 6px;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.9rem;
-            text-align: center;
         }
-        /* Disabled state for inputs when day is closed */
-        .time-input-group input:disabled {
-            background-color: #f3f4f6;
-            color: #d1d5db;
-            cursor: not-allowed;
-            border-color: transparent;
+        .override-desc { font-size: 0.85rem; color: #6b7280; line-height: 1.6; margin-bottom: 16px; }
+        .mode-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .mode-opt {
+            border: 2px solid var(--border); border-radius: 14px; padding: 14px 8px;
+            text-align: center; cursor: pointer; transition: all 0.2s; user-select: none;
         }
-        .time-separator {
-            color: var(--text-sub);
-            font-size: 1.2rem;
+        .mode-opt:active { transform: scale(0.97); }
+        .mode-ic {
+            width: 40px; height: 40px; border-radius: 10px; margin: 0 auto 8px;
+            display: flex; align-items: center; justify-content: center; font-size: 1rem;
+            transition: all 0.25s;
         }
+        .mode-ic.ic-auto { background: #F3F4F6; color: #6B7280; }
+        .mode-ic.ic-open { background: #D1FAE5; color: #059669; }
+        .mode-ic.ic-close { background: #FEE2E2; color: #DC2626; }
+        .mode-opt h4 { font-size: 0.82rem; margin-bottom: 2px; font-weight: 600; }
+        .mode-opt span { font-size: 0.66rem; color: var(--text-sub); line-height: 1.2; display: block; }
+        .mode-opt.sel-auto { border-color: #6B7280; background: #F9FAFB; }
+        .mode-opt.sel-auto .ic-auto { background: #6B7280; color: white; }
+        .mode-opt.sel-open { border-color: var(--success); background: #ECFDF5; }
+        .mode-opt.sel-open .ic-open { background: var(--success); color: white; }
+        .mode-opt.sel-close { border-color: var(--danger); background: #FEF2F2; }
+        .mode-opt.sel-close .ic-close { background: var(--danger); color: white; }
 
-        .switch-container {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-right: 15px;
-            width: 50px;
+        /* === SCHEDULE EDITOR === */
+        .schedule-card {
+            background: #FFF; border-radius: 16px; overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 30px;
+            border: 1px solid var(--border);
         }
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 44px;
-            height: 24px;
+        .sched-header {
+            padding: 16px 20px; border-bottom: 1px solid #f3f4f6;
+            display: flex; align-items: center; gap: 10px;
         }
+        .sched-header i { color: var(--secondary); }
+        .sched-header span { font-weight: 700; font-size: 0.95rem; }
+
+        .sched-row {
+            display: flex; align-items: center;
+            padding: 11px 20px; border-bottom: 1px solid #f9fafb;
+            gap: 8px; min-height: 50px; transition: background 0.15s;
+        }
+        .sched-row:last-child { border-bottom: none; }
+        .sched-row.is-today { background: #f0fdf4; }
+        .sched-row.is-closed-row { background: #fef9f9; }
+
+        .sched-day { width: 68px; flex-shrink: 0; font-size: 0.84rem; font-weight: 500; }
+        .sched-row.is-today .sched-day { color: var(--success); font-weight: 700; }
+        .today-badge {
+            display: none; font-size: 0.55rem; font-weight: 700; color: white;
+            background: var(--success); padding: 1px 5px; border-radius: 3px;
+            margin-left: 3px; vertical-align: middle;
+        }
+        .sched-row.is-today .today-badge { display: inline; }
+
+        .sched-times {
+            flex: 1; display: flex; align-items: center; gap: 6px; transition: opacity 0.25s;
+        }
+        .sched-times input[type="time"] {
+            flex: 1; padding: 6px 4px; border: 1.5px solid var(--border); border-radius: 8px;
+            font-family: 'Inter', sans-serif; font-size: 0.84rem;
+            text-align: center; transition: all 0.2s; background: white; min-width: 0;
+        }
+        .sched-times input[type="time"]:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(211,84,0,0.08); }
+        .sched-times input[type="time"]:disabled { background: #f3f4f6; color: #d1d5db; cursor: not-allowed; border-color: transparent; }
+        .time-dash { color: #d1d5db; font-weight: 500; flex-shrink: 0; }
+        .sched-times.tg-off { opacity: 0.3; pointer-events: none; }
+
+        .sched-closed-text {
+            flex: 1; text-align: center; font-size: 0.8rem; color: #d1d5db;
+            font-weight: 500; font-style: italic; display: none;
+        }
+        .sched-closed-text.show { display: block; }
+
+        .sched-sw { flex-shrink: 0; display: flex; align-items: center; gap: 6px; }
+        .switch { position: relative; display: inline-block; width: 42px; height: 23px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 34px;
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #d1d5db; transition: 0.3s; border-radius: 34px;
         }
         .slider:before {
-            position: absolute;
-            content: "";
-            height: 18px;
-            width: 18px;
-            left: 3px;
-            bottom: 3px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
+            position: absolute; content: ""; height: 17px; width: 17px;
+            left: 3px; bottom: 3px; background-color: white; transition: 0.3s;
+            border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.15);
         }
         input:checked + .slider { background-color: var(--success); }
-        input:checked + .slider:before { transform: translateX(20px); }
-        .status-label {
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: var(--text-sub);
-            width: 50px;
-            text-align: right;
-        }
-        input:checked ~ .status-label { color: var(--success); }
+        input:checked + .slider:before { transform: translateX(19px); }
+        .sw-label { font-size: 0.66rem; font-weight: 600; width: 28px; text-align: right; color: #d1d5db; transition: color 0.2s; }
+        input:checked ~ .sw-label { color: var(--success); }
 
-        .btn-save-config {
-            width: 100%; padding: 12px; background: var(--secondary);
-            color: white; border: none; border-radius: 8px;
-            font-weight: 600; cursor: pointer; margin-top: 15px;
+        .sched-footer { padding: 14px 20px; border-top: 1px solid #f3f4f6; background: #fafafa; }
+        .btn-save-sched {
+            width: 100%; padding: 13px; background: var(--secondary);
+            color: white; border: none; border-radius: 10px;
+            font-weight: 600; cursor: pointer; font-size: 0.95rem;
             display: flex; align-items: center; justify-content: center; gap: 8px;
-            transition: 0.2s;
+            font-family: 'Inter', sans-serif; transition: 0.2s;
         }
-        .btn-save-config:hover { background: #1a252f; }
+        .btn-save-sched:hover { background: #1a252f; }
+        .btn-save-sched:active { transform: scale(0.98); }
+        .sched-hint { font-size: 0.72rem; color: #9ca3af; margin-top: 8px; text-align: center; }
 
-        /* --- STOCK CONTROL WRAPPER --- */
+        /* === CONNECTION ERROR PANEL === */
+        .error-panel {
+            display: none; background: white; border-radius: 16px; padding: 30px 20px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 20px;
+            text-align: center; border: 2px solid var(--danger);
+        }
+        .error-panel.show { display: block; }
+        .error-panel .err-icon { font-size: 3rem; color: var(--danger); margin-bottom: 15px; }
+        .error-panel h3 { color: var(--danger); margin-bottom: 10px; }
+        .error-panel p { font-size: 0.88rem; color: #666; line-height: 1.6; margin-bottom: 15px; }
+        .error-panel .err-detail {
+            background: #f9fafb; border: 1px solid var(--border); border-radius: 8px;
+            padding: 12px; margin-bottom: 15px; font-size: 0.8rem; color: #999;
+            text-align: left; word-break: break-all; font-family: monospace;
+        }
+        .btn-retry {
+            padding: 12px 30px; background: var(--primary); color: white;
+            border: none; border-radius: 10px; font-weight: 600; cursor: pointer;
+            font-size: 0.95rem; font-family: 'Inter', sans-serif; transition: 0.2s;
+        }
+        .btn-retry:hover { background: var(--primary-dark); }
+        .btn-retry:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* === STOCK === */
+        .info-card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .info-card.blue { background: #F0F9FF; border: 1px solid #BAE6FD; }
+        .info-card.blue .section-title { color: #0369A1; }
+        .info-card.indigo { background: #EFF6FF; border: 1px solid #BFDBFE; }
+        .info-card.indigo .section-title { color: #1E40AF; }
+        .info-card p { font-size: 0.88rem; color: var(--text-main); line-height: 1.6; }
+
         .stock-category-group { margin-bottom: 30px; }
-        .category-label {
-            font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;
-            color: var(--text-sub); margin-bottom: 10px; font-weight: 600;
-            border-left: 4px solid var(--primary); padding-left: 10px;
-            transition: opacity 0.3s;
-        }
-
-        .stock-item {
-            background: white; padding: 15px; border-radius: 12px;
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 10px; border: 1px solid transparent;
-            transition: 0.2s; flex-wrap: wrap; gap: 10px;
-        }
+        .category-label { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-sub); margin-bottom: 10px; font-weight: 600; border-left: 4px solid var(--primary); padding-left: 10px; }
+        .stock-item { background: white; padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border: 1px solid transparent; transition: 0.2s; flex-wrap: wrap; gap: 10px; }
         .stock-item:hover { border-color: var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-        
         .item-info { flex: 1; min-width: 0; }
-        .item-info h4 { 
-            font-size: 0.95rem; color: var(--text-main); font-weight: 500; line-height: 1.3;
-            overflow: hidden; text-overflow: ellipsis;
-            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-        }
-
-        /* INPUT STOCK CONTROL */
-        .stock-control-wrapper { 
-            display: flex; 
-            align-items: center; 
-            gap: 8px; 
-            background: #F9FAFB;
-            padding: 5px;
-            border-radius: 8px;
-        }
-        .stock-input {
-            width: 70px; padding: 8px; border: 1px solid var(--border); border-radius: 6px;
-            text-align: center; font-weight: bold; color: var(--primary);
-            -moz-appearance: textfield;
-        }
-        .stock-input::-webkit-outer-spin-button,
-        .stock-input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
+        .item-info h4 { font-size: 0.92rem; color: var(--text-main); font-weight: 500; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        .stock-control-wrapper { display: flex; align-items: center; gap: 8px; background: #F9FAFB; padding: 5px; border-radius: 8px; }
+        .stock-input { width: 70px; padding: 8px; border: 1px solid var(--border); border-radius: 6px; text-align: center; font-weight: bold; color: var(--primary); -moz-appearance: textfield; font-family: 'Inter', sans-serif; }
+        .stock-input::-webkit-outer-spin-button, .stock-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         .stock-input:focus { border-color: var(--primary); outline: none; background: white; }
-        
-        /* Unlimited Badge */
-        .unlimited-badge {
-            font-size: 0.65rem; 
-            font-weight: 700; 
-            color: var(--success); 
-            background: #ECFDF5; 
-            padding: 2px 6px; 
-            border-radius: 4px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .stock-indicator {
-            font-size: 0.7rem; color: var(--success); opacity: 0; transition: opacity 0.3s;
-        }
-        .stock-indicator.show { opacity: 1; }
+        .unlimited-badge { font-size: 0.65rem; font-weight: 700; color: var(--success); background: #ECFDF5; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; }
 
-        /* Toast */
-        #toast {
-            visibility: hidden; min-width: 250px; background-color: #333; color: #fff;
-            text-align: center; border-radius: 30px; padding: 12px 20px;
-            position: fixed; z-index: 10000; left: 50%; bottom: 30px;
-            transform: translateX(-50%); font-size: 0.9rem; opacity: 0; transition: 0.3s;
-        }
-        #toast.show { visibility: visible; opacity:1; bottom: 40px; }
+        .activity-card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 30px; }
+        .activity-item { padding: 10px 0; border-bottom: 1px solid #f3f4f6; font-size: 0.88rem; color: #555; }
+        .activity-item:last-child { border-bottom: none; }
 
-        /* Order Card Styles (History) */
-        .order-card {
-            background: white; border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 15px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-        }
-        .order-header { display: flex; justify-content: space-between; margin-bottom: 8px; border-bottom: 1px dashed #eee; padding-bottom: 8px; }
-        .order-total { font-weight: 700; font-size: 1rem; }
-        .btn-complete { background: var(--success); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600; }
+        #toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 30px; padding: 12px 20px; position: fixed; z-index: 10000; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 0.9rem; opacity: 0; transition: 0.3s; }
+        #toast.show { visibility: visible; opacity: 1; bottom: 40px; }
+
+        .order-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .btn-complete { background: var(--success); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600; font-family: 'Inter', sans-serif; }
         .btn-complete:hover { background-color: #059669; }
+        .btn-export { background: var(--secondary); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; margin-bottom: 15px; display: flex; align-items: center; gap: 5px; font-family: 'Inter', sans-serif; }
 
-        /* Export Button */
-        .btn-export {
-            background: var(--secondary); color: white; border: none;
-            padding: 8px 16px; border-radius: 8px; font-size: 0.85rem;
-            cursor: pointer; margin-bottom: 15px; display: flex; align-items: center; gap: 5px;
-        }
-
-        /* Receipt Modal */
-        #receiptModal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); z-index: 10000;
-            display: none; justify-content: center; align-items: center;
-        }
-        .receipt-content {
-            background: white; width: 300px; padding: 20px;
-            font-family: 'Courier New', Courier, monospace;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            font-size: 0.85rem;
-        }
+        #receiptModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: none; justify-content: center; align-items: center; }
+        .receipt-content { background: white; width: 300px; padding: 20px; font-family: 'Courier New', monospace; box-shadow: 0 10px 25px rgba(0,0,0,0.2); font-size: 0.85rem; }
         .receipt-header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px; }
         .receipt-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
         .receipt-footer { margin-top: 15px; border-top: 1px dashed #000; padding-top: 10px; text-align: center; }
 
-        /* Responsive */
         @media (max-width: 600px) {
-            .status-options { grid-template-columns: 1fr; }
-            .nav-tab { padding: 15px 10px; font-size: 0.9rem; }
+            .mode-options { grid-template-columns: 1fr; gap: 8px; }
+            .mode-opt { display: flex; align-items: center; gap: 12px; padding: 12px 14px; text-align: left; }
+            .mode-ic { margin: 0; width: 36px; height: 36px; font-size: 0.9rem; flex-shrink: 0; }
+            .nav-tab { padding: 12px 12px; font-size: 0.85rem; }
             .stats-grid { grid-template-columns: 1fr 1fr; }
-            .form-row { flex-direction: column; gap: 10px; }
-            .time-input-group { padding-left: 5px; }
-            .day-name { width: 70px; font-size: 0.8rem; }
+            .sched-day { width: 56px; font-size: 0.78rem; }
+            .sw-label { display: none; }
         }
     </style>
 </head>
 <body>
 
-    <!-- LOGIN SCREEN -->
+    <!-- LOGIN -->
     <div id="loginScreen">
         <div class="login-card">
             <img src="https://z-cdn-media.chatglm.cn/files/50ca2c37-9a98-4c90-923b-ae99959846b9.png?auth_key=1876671393-5447ef07c70045b48cce9108e1c0bf25-0-4f77a9446e7fe2d91efdbbfa00385980" alt="Logo" class="login-logo">
-            <h2 style="margin-bottom: 5px; color: var(--secondary);">Admin Panel</h2>
-            <p style="color: #888; font-size: 0.9rem;">Bubur Grace Management</p>
-            
-            <input type="password" id="adminPassword" class="login-input" placeholder="Password Admin">
-            <div class="error-msg" id="loginError"></div>
-            <button class="btn-login" onclick="attemptLogin()">MASUK DASHBOARD</button>
+            <h2 style="margin-bottom:5px;color:var(--secondary);">Admin Panel</h2>
+            <p style="color:#888;font-size:0.9rem;">Bubur Grace Management</p>
+            <input type="password" id="adminPassword" class="login-input" placeholder="Password Admin" autocomplete="off">
+            <div class="error-msg" id="loginError">&nbsp;</div>
+            <button class="btn-login" id="btnLogin">MASUK DASHBOARD</button>
         </div>
     </div>
 
-    <!-- DASHBOARD SCREEN -->
+    <!-- DASHBOARD -->
     <div id="dashboardScreen">
-        <header>
+        <header class="admin-header">
             <div class="brand">
-                <i class="fa-solid fa-gauge-high" style="color: var(--primary); font-size: 1.5rem;"></i>
-                <div>
-                    <h2>Admin Bubur GRace</h2>
-                    <span style="font-size: 0.8rem; color: #888;">Online Control Panel</span>
-                </div>
+                <i class="fa-solid fa-gauge-high" style="color:var(--primary);font-size:1.4rem;"></i>
+                <div><h2>Admin Bubur GRace</h2><span style="font-size:0.78rem;color:#888;">Online Control Panel</span></div>
             </div>
-            <button class="btn-logout" onclick="logout()">
-                <i class="fa-solid fa-arrow-right-from-bracket"></i> Keluar
-            </button>
+            <button class="btn-logout" id="btnLogout"><i class="fa-solid fa-arrow-right-from-bracket"></i> Keluar</button>
         </header>
 
-        <nav class="nav-tabs">
-            <div class="nav-tab active" onclick="switchTab('dashboard')"><i class="fa-solid fa-chart-line"></i> Dashboard</div>
-            <div class="nav-tab" onclick="switchTab('status')"><i class="fa-solid fa-store"></i> Status & Jam</div>
-            <div class="nav-tab" onclick="switchTab('daily')"><i class="fa-solid fa-box-open"></i> Stok Harian</div>
-            <div class="nav-tab" onclick="switchTab('weekend')"><i class="fa-solid fa-umbrella-beach"></i> Stok Weekend</div>
-            <div class="nav-tab" onclick="switchTab('history')"><i class="fa-solid fa-clock-rotate-left"></i> Riwayat</div>
+        <nav class="nav-tabs" id="navTabs">
+            <div class="nav-tab active" data-tab="dashboard"><i class="fa-solid fa-chart-line"></i> Dashboard</div>
+            <div class="nav-tab" data-tab="status"><i class="fa-regular fa-clock"></i> Jam Operasional</div>
+            <div class="nav-tab" data-tab="daily"><i class="fa-solid fa-box-open"></i> Stok Harian</div>
+            <div class="nav-tab" data-tab="weekend"><i class="fa-solid fa-umbrella-beach"></i> Stok Weekend</div>
+            <div class="nav-tab" data-tab="history"><i class="fa-solid fa-clock-rotate-left"></i> Riwayat</div>
         </nav>
 
-        <main id="mainContent">
-            <!-- Tab: Dashboard -->
+        <main class="admin-main" id="mainContent">
+
+            <!-- ERROR PANEL (muncul jika Firebase gagal) -->
+            <div class="error-panel" id="errorPanel">
+                <div class="err-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <h3>Gagal Terhubung ke Firebase</h3>
+                <p>Dashboard tidak bisa memuat data. Kemungkinan penyebab:</p>
+                <div class="err-detail" id="errorDetail">Memeriksa...</div>
+                <p style="font-size:0.82rem;color:#888;">
+                    <strong>Solusi:</strong><br>
+                    1. Pastikan ada koneksi internet<br>
+                    2. Coba buka file ini langsung di browser (bukan via Live Server)<br>
+                    3. Jika pakai Live Server, buka via <code>http://127.0.0.1:5500</code> bukan <code>file://</code><br>
+                    4. Coba reload halaman
+                </p>
+                <button class="btn-retry" id="btnRetry"><i class="fa-solid fa-rotate-right"></i> Coba Lagi</button>
+            </div>
+
+            <!-- TAB: DASHBOARD -->
             <div id="tab-dashboard" class="tab-content">
                 <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-value" id="statOmset">Rp 0</div>
-                        <div class="stat-label">Omset Hari Ini</div>
+                    <div class="stat-card"><div class="stat-value" id="statOmset">Rp 0</div><div class="stat-label">Omset Hari Ini</div></div>
+                    <div class="stat-card"><div class="stat-value" id="statOrders">0</div><div class="stat-label">Jumlah Order</div></div>
+                    <div class="stat-card"><div class="stat-value" id="statTop" style="font-size:1.1rem;line-height:2rem;">-</div><div class="stat-label">Menu Terlaris</div></div>
+                </div>
+                <button class="btn-reset-stats" id="btnResetStats"><i class="fa-solid fa-rotate-right"></i> Reset Omset & Bersihkan List</button>
+                <div class="activity-card">
+                    <div class="section-title"><i class="fa-solid fa-bell" style="color:var(--primary);"></i> Aktivitas Terkini</div>
+                    <div id="recentActivityList">Memuat data...</div>
+                </div>
+            </div>
+
+            <!-- TAB: JAM OPERASIONAL -->
+            <div id="tab-status" class="tab-content" style="display:none;">
+                <div class="live-card" id="liveCard">
+                    <div class="live-card-top">
+                        <div class="live-icon-box ic-closed" id="liveIcon"><i class="fa-solid fa-store-slash"></i></div>
+                        <div class="live-info">
+                            <div class="live-label">Status Toko (Real-Time)</div>
+                            <div class="live-status s-closed" id="liveStatusText">Memuat...</div>
+                        </div>
+                        <div class="live-dot d-closed" id="liveDot"></div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="statOrders">0</div>
-                        <div class="stat-label">Jumlah Order</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="statTop" style="font-size:1.2rem; line-height:2rem;">-</div>
-                        <div class="stat-label">Menu Terlaris</div>
+                    <div class="live-detail" id="liveDetail">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span id="liveDetailText">Mengambil data jadwal...</span>
+                        <span class="live-clock" id="liveClock">--:--:--</span>
                     </div>
                 </div>
 
-                <!-- TOMBOL RESET OMSET -->
-                <button class="btn-reset-stats" onclick="resetDailyStats()">
-                    <i class="fa-solid fa-rotate-right"></i> Reset Omset & Bersihkan List
-                </button>
+                <div class="override-card">
+                    <div class="section-title"><i class="fa-solid fa-sliders" style="color:var(--primary);"></i> Override Darurat</div>
+                    <p class="override-desc">
+                        <strong>Otomatis</strong> = status 100% mengikuti jam operasional.<br>
+                        <strong>Paksa Buka/Tutup</strong> = hanya darurat, menimpa jadwal sementara.
+                    </p>
+                    <div class="mode-options">
+                        <div class="mode-opt" id="opt-auto" data-mode="auto"><div class="mode-ic ic-auto"><i class="fa-solid fa-robot"></i></div><div><h4>Otomatis</h4><span>Ikuti Jadwal</span></div></div>
+                        <div class="mode-opt" id="opt-open" data-mode="open"><div class="mode-ic ic-open"><i class="fa-solid fa-store"></i></div><div><h4>Paksa Buka</h4><span>Darurat</span></div></div>
+                        <div class="mode-opt" id="opt-close" data-mode="close"><div class="mode-ic ic-close"><i class="fa-solid fa-store-slash"></i></div><div><h4>Paksa Tutup</h4><span>Darurat</span></div></div>
+                    </div>
+                </div>
 
-                <div class="status-card">
-                    <div class="section-title"><i class="fa-solid fa-bell" style="color:var(--primary);"></i> Aktivitas Terkini (Hari Ini)</div>
-                    <div id="recentActivityList" style="font-size:0.9rem; color:#555;">
-                        Memuat data...
+                <div class="schedule-card">
+                    <div class="sched-header"><i class="fa-regular fa-clock"></i><span>Setting Jam Operasional Per Hari</span></div>
+                    <div id="schedContainer"></div>
+                    <div class="sched-footer">
+                        <button class="btn-save-sched" id="btnSaveSched"><i class="fa-solid fa-floppy-disk"></i> Simpan Jadwal</button>
+                        <div class="sched-hint"><i class="fa-solid fa-circle-info"></i> Matikan toggle = toko tutup di hari itu. Jam yang kamu set menentukan status buka/tutup secara real-time.</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Tab: Status & Jam -->
-            <div id="tab-status" class="tab-content" style="display: none;">
-                <!-- Bagian Mode Operasional -->
-                <div class="status-card">
-                    <div class="section-title">
-                        <i class="fa-solid fa-sliders" style="color: var(--primary);"></i>
-                        Atur Mode Operasional
-                    </div>
-                    <p style="font-size: 0.9rem; color: #666; line-height: 1.5; margin-bottom: 20px;">
-                        Kontrol status buka/tutup toko. "Paksa Buka" akan mengaktifkan menu Weekend (Nasi Uduk).
-                    </p>
-                    <div class="status-options">
-                        <div class="status-opt" id="opt-auto" onclick="setStoreStatus('auto')">
-                            <i class="fa-solid fa-robot" style="font-size: 1.5rem; margin-bottom: 10px; color: #666;"></i>
-                            <h4>Otomatis</h4>
-                            <span>Ikuti Jam & Hari</span>
-                        </div>
-                        <div class="status-opt" id="opt-open" onclick="setStoreStatus('open')">
-                            <i class="fa-solid fa-store" style="font-size: 1.5rem; margin-bottom: 10px; color: var(--success);"></i>
-                            <h4>Paksa Buka</h4>
-                            <span>Buka + Menu Weekend</span>
-                        </div>
-                        <div class="status-opt" id="opt-close" onclick="setStoreStatus('close')">
-                            <i class="fa-solid fa-store-slash" style="font-size: 1.5rem; margin-bottom: 10px; color: var(--danger);"></i>
-                            <h4>Paksa Tutup</h4>
-                            <span>Tutup Total</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Bagian Pengaturan Jam (GOJEK STYLE) -->
-                <div class="config-card">
-                    <div class="section-title" style="margin-bottom: 20px;">
-                        <i class="fa-regular fa-clock" style="color: var(--secondary);"></i> Jam Operasional Per Hari
-                    </div>
-                    
-                    <!-- Container Hari (Generated by JS) -->
-                    <div id="scheduleContainer"></div>
-
-                    <button class="btn-save-config" onclick="saveConfig()">
-                        <i class="fa-solid fa-save"></i> Simpan Perubahan Jam
-                    </button>
-                    <p style="font-size: 0.8rem; color: #888; margin-top: 10px; text-align: center;">
-                        *Jika toggle "Buka" dimatikan, toko dianggap tutup pada hari tersebut.
-                    </p>
-                </div>
-            </div>
-
-            <!-- Tab: Daily Stock -->
-            <div id="tab-daily" class="tab-content" style="display: none;">
-                <div class="status-card" style="background: #F0F9FF; border: 1px solid #BAE6FD;">
-                    <div class="section-title" style="color: #0369A1;">
-                        <i class="fa-solid fa-boxes-stacked"></i> Atur Stok Harian
-                    </div>
-                    <p style="font-size: 0.9rem; color: #0C4A6E;">
-                        <strong>Ketik Angka:</strong> Membatasi stok. <br>
-                        <strong>Kosongkan Input (Blank):</strong> Mengubah menjadi UNLIMITED (Stok 0).<br>
-                        <em>Menu Nasi Uduk tidak ada di sini (cari di tab Weekend).</em>
-                    </p>
-                </div>
-                <div class="search-container">
-                    <div class="search-wrapper">
-                        <i class="fa-solid fa-search"></i>
-                        <input type="text" id="dailySearch" placeholder="Cari nama menu..." onkeyup="filterStockList('daily')">
-                    </div>
-                </div>
+            <!-- TAB: STOK HARIAN -->
+            <div id="tab-daily" class="tab-content" style="display:none;">
+                <div class="info-card blue"><div class="section-title"><i class="fa-solid fa-boxes-stacked"></i> Atur Stok Harian</div><p><strong>Ketik Angka:</strong> Membatasi stok. <strong>Kosongkan:</strong> Unlimited.<br><em>Menu Nasi Uduk ada di tab Weekend.</em></p></div>
+                <div class="search-container"><div class="search-wrapper"><i class="fa-solid fa-search"></i><input type="text" id="dailySearch" placeholder="Cari nama menu..."></div></div>
                 <div id="dailyStockList"></div>
             </div>
 
-            <!-- Tab: Weekend Stock -->
-            <div id="tab-weekend" class="tab-content" style="display: none;">
-                <div class="status-card" style="background: #EFF6FF; border: 1px solid #BFDBFE;">
-                    <div class="section-title" style="color: #1E40AF;">
-                        <i class="fa-solid fa-sun"></i> Stok Weekend
-                    </div>
-                    <p style="font-size: 0.9rem; color: #1E3A8A;">
-                        Khusus untuk menu Nasi Uduk dan varian Ayam Goreng yang hanya jual di Weekend.
-                    </p>
-                </div>
-                <div class="search-container">
-                    <div class="search-wrapper">
-                        <i class="fa-solid fa-search"></i>
-                        <input type="text" id="weekendSearch" placeholder="Cari nama menu..." onkeyup="filterStockList('weekend')">
-                    </div>
-                </div>
+            <!-- TAB: STOK WEEKEND -->
+            <div id="tab-weekend" class="tab-content" style="display:none;">
+                <div class="info-card indigo"><div class="section-title"><i class="fa-solid fa-sun"></i> Stok Weekend</div><p>Khusus menu Nasi Uduk yang hanya jual saat Weekend atau mode Paksa Buka.</p></div>
+                <div class="search-container"><div class="search-wrapper"><i class="fa-solid fa-search"></i><input type="text" id="weekendSearch" placeholder="Cari nama menu..."></div></div>
                 <div id="weekendStockList"></div>
             </div>
 
-            <!-- Tab: History -->
-            <div id="tab-history" class="tab-content" style="display: none;">
-                <div class="section-title">
-                    <i class="fa-solid fa-clock-rotate-left" style="color: var(--primary);"></i> Riwayat Pesanan Masuk
-                </div>
-                <button class="btn-export" onclick="exportToCSV()">
-                    <i class="fa-solid fa-file-csv"></i> Download Laporan (CSV)
-                </button>
-                <div id="ordersList">
-                    <div class="empty-history">Memuat data pesanan...</div>
-                </div>
+            <!-- TAB: RIWAYAT -->
+            <div id="tab-history" class="tab-content" style="display:none;">
+                <div class="section-title"><i class="fa-solid fa-clock-rotate-left" style="color:var(--primary);"></i> Riwayat Pesanan</div>
+                <button class="btn-export" id="btnExport"><i class="fa-solid fa-file-csv"></i> Download Laporan (CSV)</button>
+                <div id="ordersList"><div style="text-align:center;padding:30px;color:#999;">Memuat data...</div></div>
             </div>
         </main>
     </div>
 
-    <!-- Receipt Modal -->
-    <div id="receiptModal" onclick="this.style.display='none'">
-        <div class="receipt-content" onclick="event.stopPropagation()">
-            <div class="receipt-header">
-                <h3>BUBUR GRACE</h3>
-                <p>Citra Rasa Istimewa</p>
-            </div>
+    <!-- RECEIPT MODAL -->
+    <div id="receiptModal">
+        <div class="receipt-content" id="receiptInner">
+            <div class="receipt-header"><h3>BUBUR GRACE</h3><p>Citra Rasa Istimewa</p></div>
             <div id="receiptBody"></div>
-            <div class="receipt-footer">
-                <p>Terima Kasih!</p>
-                <button onclick="document.getElementById('receiptModal').style.display='none'" style="margin-top:10px; padding:5px 10px;">Tutup</button>
-            </div>
+            <div class="receipt-footer"><p>Terima Kasih!</p><button id="btnCloseReceipt" style="margin-top:10px;padding:5px 15px;border:1px solid #ccc;border-radius:6px;cursor:pointer;background:white;">Tutup</button></div>
         </div>
     </div>
 
-    <div id="toast">Berhasil disimpan</div>
+    <div id="toast">Berhasil</div>
 
     <script>
-        // --- DATA MENU (SINKRONISASI KEY - DIHAPUS VARIAN AKHIR) ---
-        const menuItems = [
-            // PAKET
-            { name: "Paket A (Bubur Biasa + Minuman)", category: "Paket", isWeekend: false },
-            { name: "Paket B (Bubur Telur + Pangsit Goreng)", category: "Paket", isWeekend: false },
-            { name: "Paket C (Mie Kecil Komplit + Pangsit Goreng)", category: "Paket", isWeekend: false },
-            { name: "Paket D (Mie Lebar Komplit + Pangsit Goreng)", category: "Paket", isWeekend: false },
-            { name: "Paket E (Kwetiau Komplit + Pangsit Goreng)", category: "Paket", isWeekend: false },
-            { name: "Paket F (Bihun Komplit + Pangsit Goreng)", category: "Paket", isWeekend: false },
-            // BUBUR
-            { name: "Bubur Ayam Biasa", category: "Bubur", isWeekend: false },
-            { name: "Bubur + Telur Ayam Kampung", category: "Bubur", isWeekend: false },
-            { name: "Bubur Polos / Putih", category: "Bubur", isWeekend: false },
-            { name: "Extra Merah Telur Ayam Kampung", category: "Topping", isWeekend: false },
-            { name: "Extra Ayam Rebus", category: "Topping", isWeekend: false },
-            { name: "Extra Cakwe Iris", category: "Topping", isWeekend: false },
-            // MIE (DIBERSIHKAN JENIS MIE)
-            { name: "Mie Ayam Biasa", category: "Mie", isWeekend: false },
-            { name: "Mie Ayam Baso", category: "Mie", isWeekend: false },
-            { name: "Mie Ayam Pangsit Rebus", category: "Mie", isWeekend: false },
-            { name: "Mie Ayam Komplit", category: "Mie", isWeekend: false },
-            // MIE YAMIN
-            { name: "Mie Yamin Biasa", category: "Mie", isWeekend: false },
-            { name: "Mie Yamin Baso", category: "Mie", isWeekend: false },
-            { name: "Mie Yamin Pangsit Rebus", category: "Mie", isWeekend: false },
-            { name: "Mie Yamin Komplit", category: "Mie", isWeekend: false },
-            // KWETIAU
-            { name: "Kwetiau Ayam Biasa", category: "Kwetiau", isWeekend: false },
-            { name: "Kwetiau Baso", category: "Kwetiau", isWeekend: false },
-            { name: "Kwetiau Pangsit Rebus", category: "Kwetiau", isWeekend: false },
-            { name: "Kwetiau Komplit", category: "Kwetiau", isWeekend: false },
-            // BIHUN
-            { name: "Bihun Ayam Biasa", category: "Bihun", isWeekend: false },
-            { name: "Bihun Baso", category: "Bihun", isWeekend: false },
-            { name: "Bihun Pangsit Rebus", category: "Bihun", isWeekend: false },
-            { name: "Bihun Komplit", category: "Bihun", isWeekend: false },
-            // BASO
-            { name: "Pangsit Rebus Ayam (5 Pcs)", category: "Baso", isWeekend: false },
-            { name: "Baso Sapi (5 Pcs)", category: "Baso", isWeekend: false },
-            { name: "Baso Ayam Sawi (5 Pcs)", category: "Baso", isWeekend: false },
-            { name: "Baso Ayam Sawi & Sapi (5 Pcs)", category: "Baso", isWeekend: false },
-            { name: "Baso Ayam Sawi & Pangsit Rebus (5 Pcs)", category: "Baso", isWeekend: false },
-            // WEEKEND MENU (NASI UDUK)
-            { name: "Nasi Uduk + Ayam Goreng", category: "Nasi Uduk", isWeekend: true },
-            { name: "Ayam Goreng", category: "Nasi Uduk", isWeekend: true },
-            { name: "Nasi Uduk Polos", category: "Nasi Uduk", isWeekend: true },
-            { name: "Nasi Uduk + Telur Dadar", category: "Nasi Uduk", isWeekend: true },
-            { name: "Nasi Uduk + Telur Ceplok Balado", category: "Nasi Uduk", isWeekend: true },
-            // LAINNYA
-            { name: "Sate Ayam Manis (3 Pcs)", category: "Sate", isWeekend: false },
-            { name: "Sate Ayam Manis (5 Pcs)", category: "Sate", isWeekend: false },
-            { name: "Sate Ayam Manis (10 Pcs)", category: "Sate", isWeekend: false },
-            { name: "Bubur Kacang Ijo", category: "Bubur Manis", isWeekend: false },
-            { name: "Bubur Ketan Item", category: "Bubur Manis", isWeekend: false },
-            { name: "Bubur Mix", category: "Bubur Manis", isWeekend: false },
-            { name: "Kacang Ijo Crispy", category: "Bubur Manis", isWeekend: false },
-            { name: "Ketan Item Crispy", category: "Bubur Manis", isWeekend: false },
-            { name: "Mix Crispy", category: "Bubur Manis", isWeekend: false },
-            { name: "Dimsum Ayam Isi 3", category: "Dimsum", isWeekend: false },
-            { name: "Dimsum Ayam Isi 5", category: "Dimsum", isWeekend: false },
-            { name: "Dimsum Ayam Isi 10", category: "Dimsum", isWeekend: false },
-            { name: "Dimsum Ayam Frozen Isi 15", category: "Dimsum", isWeekend: false },
-            { name: "Cakwe Goreng", category: "Gorengan", isWeekend: false },
-            { name: "Pangsit Goreng Isi Ayam (5 Pcs)", category: "Gorengan", isWeekend: false },
-            { name: "Kulit Pangsit (3 Pcs)", category: "Gorengan", isWeekend: false },
-            { name: "Kulit Pangsit Basah (10 Pcs)", category: "Gorengan", isWeekend: false },
-            // ANEKA SATE (JAJANAN)
-            { name: "Sate Ati", category: "Jajanan", isWeekend: false },
-            { name: "Sate Ampela", category: "Jajanan", isWeekend: false },
-            { name: "Sate Usus", category: "Jajanan", isWeekend: false },
-            { name: "Sate Telur Puyuh", category: "Jajanan", isWeekend: false },
-            { name: "Sate Jantung", category: "Jajanan", isWeekend: false },
-            { name: "Sate Jendil", category: "Jajanan", isWeekend: false },
-            // KOPI
-            { name: "Kopi O", category: "Minuman", isWeekend: false },
-            { name: "Kopi O + Gula", category: "Minuman", isWeekend: false },
-            { name: "Kopi O + Susu", category: "Minuman", isWeekend: false },
-            { name: "Kopi O + 2 Egg", category: "Minuman", isWeekend: false },
-            { name: "Kopi O + 4 Egg", category: "Minuman", isWeekend: false },
-            { name: "Telur Rebus", category: "Minuman", isWeekend: false },
-            // MINUMAN LAINNYA
-            { name: "Sari Kacang Ijo", category: "Minuman", isWeekend: false },
-            { name: "Susu Kacang Kedelai", category: "Minuman", isWeekend: false },
-            { name: "Thai Tea", category: "Minuman", isWeekend: false },
-            { name: "Koffie Susu GRace", category: "Minuman", isWeekend: false },
-            { name: "Koffie Latte GRace", category: "Minuman", isWeekend: false },
-            { name: "Jeruk Murni", category: "Minuman", isWeekend: false },
-            { name: "Es Teh Tawar", category: "Minuman", isWeekend: false },
-            { name: "Es Teh Manis", category: "Minuman", isWeekend: false },
-            { name: "Teh Tawar Panas", category: "Minuman", isWeekend: false },
-            { name: "Teh Manis Panas", category: "Minuman", isWeekend: false },
-            { name: "Aqua Botol", category: "Minuman", isWeekend: false },
-            { name: "S-tee", category: "Minuman", isWeekend: false },
-            { name: "Extra Es Batu", category: "Minuman", isWeekend: false }
+        /* ==============================================
+           DATA MENU
+        ============================================== */
+        var menuItems = [
+            {name:"Paket A (Bubur Biasa + Minuman)",category:"Paket",isWeekend:false},
+            {name:"Paket B (Bubur Telur + Pangsit Goreng)",category:"Paket",isWeekend:false},
+            {name:"Paket C (Mie Kecil Komplit + Pangsit Goreng)",category:"Paket",isWeekend:false},
+            {name:"Paket D (Mie Lebar Komplit + Pangsit Goreng)",category:"Paket",isWeekend:false},
+            {name:"Paket E (Kwetiau Komplit + Pangsit Goreng)",category:"Paket",isWeekend:false},
+            {name:"Paket F (Bihun Komplit + Pangsit Goreng)",category:"Paket",isWeekend:false},
+            {name:"Bubur Ayam Biasa",category:"Bubur",isWeekend:false},
+            {name:"Bubur + Telur Ayam Kampung",category:"Bubur",isWeekend:false},
+            {name:"Bubur Polos / Putih",category:"Bubur",isWeekend:false},
+            {name:"Extra Merah Telur Ayam Kampung",category:"Topping",isWeekend:false},
+            {name:"Extra Ayam Rebus",category:"Topping",isWeekend:false},
+            {name:"Extra Cakwe Iris",category:"Topping",isWeekend:false},
+            {name:"Mie Ayam Biasa",category:"Mie",isWeekend:false},
+            {name:"Mie Ayam Baso",category:"Mie",isWeekend:false},
+            {name:"Mie Ayam Pangsit Rebus",category:"Mie",isWeekend:false},
+            {name:"Mie Ayam Komplit",category:"Mie",isWeekend:false},
+            {name:"Mie Yamin Biasa",category:"Mie",isWeekend:false},
+            {name:"Mie Yamin Baso",category:"Mie",isWeekend:false},
+            {name:"Mie Yamin Pangsit Rebus",category:"Mie",isWeekend:false},
+            {name:"Mie Yamin Komplit",category:"Mie",isWeekend:false},
+            {name:"Kwetiau Ayam Biasa",category:"Kwetiau",isWeekend:false},
+            {name:"Kwetiau Baso",category:"Kwetiau",isWeekend:false},
+            {name:"Kwetiau Pangsit Rebus",category:"Kwetiau",isWeekend:false},
+            {name:"Kwetiau Komplit",category:"Kwetiau",isWeekend:false},
+            {name:"Bihun Ayam Biasa",category:"Bihun",isWeekend:false},
+            {name:"Bihun Baso",category:"Bihun",isWeekend:false},
+            {name:"Bihun Pangsit Rebus",category:"Bihun",isWeekend:false},
+            {name:"Bihun Komplit",category:"Bihun",isWeekend:false},
+            {name:"Pangsit Rebus Ayam (5 Pcs)",category:"Baso",isWeekend:false},
+            {name:"Baso Sapi (5 Pcs)",category:"Baso",isWeekend:false},
+            {name:"Baso Ayam Sawi (5 Pcs)",category:"Baso",isWeekend:false},
+            {name:"Baso Ayam Sawi & Sapi (5 Pcs)",category:"Baso",isWeekend:false},
+            {name:"Baso Ayam Sawi & Pangsit Rebus (5 Pcs)",category:"Baso",isWeekend:false},
+            {name:"Nasi Uduk + Ayam Goreng",category:"Nasi Uduk",isWeekend:true},
+            {name:"Ayam Goreng",category:"Nasi Uduk",isWeekend:true},
+            {name:"Nasi Uduk Polos",category:"Nasi Uduk",isWeekend:true},
+            {name:"Nasi Uduk + Telur Dadar",category:"Nasi Uduk",isWeekend:true},
+            {name:"Nasi Uduk + Telur Ceplok Balado",category:"Nasi Uduk",isWeekend:true},
+            {name:"Sate Ayam Manis (3 Pcs)",category:"Sate",isWeekend:false},
+            {name:"Sate Ayam Manis (5 Pcs)",category:"Sate",isWeekend:false},
+            {name:"Sate Ayam Manis (10 Pcs)",category:"Sate",isWeekend:false},
+            {name:"Bubur Kacang Ijo",category:"Bubur Manis",isWeekend:false},
+            {name:"Bubur Ketan Item",category:"Bubur Manis",isWeekend:false},
+            {name:"Bubur Mix",category:"Bubur Manis",isWeekend:false},
+            {name:"Kacang Ijo Crispy",category:"Bubur Manis",isWeekend:false},
+            {name:"Ketan Item Crispy",category:"Bubur Manis",isWeekend:false},
+            {name:"Mix Crispy",category:"Bubur Manis",isWeekend:false},
+            {name:"Dimsum Ayam Isi 3",category:"Dimsum",isWeekend:false},
+            {name:"Dimsum Ayam Isi 5",category:"Dimsum",isWeekend:false},
+            {name:"Dimsum Ayam Isi 10",category:"Dimsum",isWeekend:false},
+            {name:"Dimsum Ayam Frozen Isi 15",category:"Dimsum",isWeekend:false},
+            {name:"Cakwe Goreng",category:"Gorengan",isWeekend:false},
+            {name:"Pangsit Goreng Isi Ayam (5 Pcs)",category:"Gorengan",isWeekend:false},
+            {name:"Kulit Pangsit (3 Pcs)",category:"Gorengan",isWeekend:false},
+            {name:"Kulit Pangsit Basah (10 Pcs)",category:"Gorengan",isWeekend:false},
+            {name:"Sate Ati",category:"Jajanan",isWeekend:false},
+            {name:"Sate Ampela",category:"Jajanan",isWeekend:false},
+            {name:"Sate Usus",category:"Jajanan",isWeekend:false},
+            {name:"Sate Telur Puyuh",category:"Jajanan",isWeekend:false},
+            {name:"Sate Jantung",category:"Jajanan",isWeekend:false},
+            {name:"Sate Jendil",category:"Jajanan",isWeekend:false},
+            {name:"Kopi O",category:"Minuman",isWeekend:false},
+            {name:"Kopi O + Gula",category:"Minuman",isWeekend:false},
+            {name:"Kopi O + Susu",category:"Minuman",isWeekend:false},
+            {name:"Kopi O + 2 Egg",category:"Minuman",isWeekend:false},
+            {name:"Kopi O + 4 Egg",category:"Minuman",isWeekend:false},
+            {name:"Telur Rebus",category:"Minuman",isWeekend:false},
+            {name:"Sari Kacang Ijo",category:"Minuman",isWeekend:false},
+            {name:"Susu Kacang Kedelai",category:"Minuman",isWeekend:false},
+            {name:"Thai Tea",category:"Minuman",isWeekend:false},
+            {name:"Koffie Susu GRace",category:"Minuman",isWeekend:false},
+            {name:"Koffie Latte GRace",category:"Minuman",isWeekend:false},
+            {name:"Jeruk Murni",category:"Minuman",isWeekend:false},
+            {name:"Es Teh Tawar",category:"Minuman",isWeekend:false},
+            {name:"Es Teh Manis",category:"Minuman",isWeekend:false},
+            {name:"Teh Tawar Panas",category:"Minuman",isWeekend:false},
+            {name:"Teh Manis Panas",category:"Minuman",isWeekend:false},
+            {name:"Aqua Botol",category:"Minuman",isWeekend:false},
+            {name:"S-tee",category:"Minuman",isWeekend:false},
+            {name:"Extra Es Batu",category:"Minuman",isWeekend:false}
         ];
 
-        // --- FIREBASE CONFIG ---
-        const firebaseConfig = {
+        /* ==============================================
+           VARIABEL GLOBAL
+        ============================================== */
+        var db = null;
+        var firebaseReady = false;
+        var storeMode = 'auto';
+        var scheduleData = null;
+        var stockData = {};
+        var weekendStockData = {};
+        var allOrders = {};
+        var DAYS = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+        var DEFAULT_SCHED = {
+            0:{isOpen:true,open:'06:00',close:'12:00'},
+            1:{isOpen:false,open:'',close:''},
+            2:{isOpen:true,open:'06:00',close:'12:00'},
+            3:{isOpen:true,open:'06:00',close:'12:00'},
+            4:{isOpen:true,open:'06:00',close:'12:00'},
+            5:{isOpen:true,open:'06:00',close:'12:00'},
+            6:{isOpen:true,open:'06:00',close:'12:00'}
+        };
+
+        var firebaseConfig = {
             apiKey: "AIzaSyCj__JH5w__RdSEqtR59Cr7ctEOyl6lzUg",
             authDomain: "buburgrace.firebaseapp.com",
             databaseURL: "https://buburgrace-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "buburgrace",
+            projectId: "buburgrace"
         };
 
-        let db;
-        let storeStatusMode = 'auto';
-        let stockData = {}; 
-        let weekendStockData = {}; 
-        let allOrdersData = {}; 
+        /* ==============================================
+           LOGIN
+        ============================================== */
+        (function(){
+            var inp = document.getElementById('adminPassword');
+            var btn = document.getElementById('btnLogin');
 
-        // --- LOGIN LOGIC ---
-        function attemptLogin() {
-            const pass = document.getElementById('adminPassword').value;
-            if (pass === 'buburgrace123') {
-                document.getElementById('loginScreen').style.opacity = '0';
-                setTimeout(() => {
-                    document.getElementById('loginScreen').style.display = 'none';
-                    document.getElementById('dashboardScreen').style.display = 'flex';
-                    initFirebase();
-                },500);
-            } else {
-                const err = document.getElementById('loginError');
-                err.innerText = "Password Salah! Coba lagi.";
-                document.getElementById('adminPassword').classList.add('input-error');
+            function tryLogin(){
+                var v = (inp.value||'').trim();
+                if(v === 'buburgrace123'){
+                    document.getElementById('loginError').innerHTML = '&nbsp;';
+                    btn.disabled = true;
+                    btn.textContent = 'MENGHUBUNGKAN...';
+                    document.getElementById('loginScreen').style.opacity = '0';
+                    setTimeout(function(){
+                        document.getElementById('loginScreen').style.display = 'none';
+                        document.getElementById('dashboardScreen').style.display = 'flex';
+                        initFirebase();
+                    }, 500);
+                } else {
+                    document.getElementById('loginError').textContent = 'Password Salah! Coba lagi.';
+                    inp.value = '';
+                    inp.focus();
+                }
             }
-        }
-        function logout() { location.reload(); }
 
-        // --- INIT & FIREBASE LISTENERS ---
-        function initFirebase() {
+            btn.addEventListener('click', tryLogin);
+            inp.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.keyCode===13){e.preventDefault();tryLogin();} });
+            inp.addEventListener('keyup', function(e){ if(e.key==='Enter'||e.keyCode===13){e.preventDefault();tryLogin();} });
+            inp.addEventListener('input', function(){ document.getElementById('loginError').innerHTML = '&nbsp;'; });
+        })();
+
+        function logout(){ location.reload(); }
+
+        /* ==============================================
+           TAB SWITCHING
+        ============================================== */
+        document.getElementById('navTabs').addEventListener('click', function(e){
+            var t = e.target.closest('.nav-tab');
+            if(!t) return;
+            var name = t.getAttribute('data-tab');
+            if(!name) return;
+            var all = document.querySelectorAll('.tab-content');
+            for(var i=0;i<all.length;i++) all[i].style.display='none';
+            var tabs = document.querySelectorAll('.nav-tab');
+            for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('active');
+            t.classList.add('active');
+            var el = document.getElementById('tab-'+name);
+            if(el) el.style.display='';
+        });
+
+        /* ==============================================
+           INIT FIREBASE — DENGAN ERROR HANDLING LENGKAP
+        ============================================== */
+        function initFirebase(){
+            var errorPanel = document.getElementById('errorPanel');
+            var errorDetail = document.getElementById('errorDetail');
+
+            /* Sembunyikan error panel dulu */
+            errorPanel.classList.remove('show');
+
+            /* STEP 1: Cek apakah SDK Firebase berhasil dimuat */
+            if(typeof firebase === 'undefined'){
+                showError('Firebase SDK tidak berhasil dimuat dari CDN.', 'Pastikan ada koneksi internet dan coba reload halaman. Jika masih gagal, coba gunakan browser lain atau buka file ini langsung (bukan via Live Server).');
+                return;
+            }
+
+            /* STEP 2: Cek apakah Firebase App sudah pernah diinisialisasi */
+            try {
+                var existingApp = firebase.apps.find(function(app){ return app.name === '[DEFAULT]'; });
+                if(existingApp){
+                    db = existingApp.database();
+                    firebaseReady = true;
+                    startListeners();
+                    return;
+                }
+            } catch(e){
+                /* abaikan, lanjut inisialisasi */
+            }
+
+            /* STEP 3: Inisialisasi Firebase App */
             try {
                 firebase.initializeApp(firebaseConfig);
+            } catch(initErr){
+                showError('Gagal menginisialisasi Firebase App.', initErr.message || String(initErr));
+                return;
+            }
+
+            /* STEP 4: Cek koneksi database */
+            try {
                 db = firebase.database();
-                
-                //1. Listen Status
-                db.ref('bubur_grace/status').on('value', (snapshot) => {
-                    const val = snapshot.val();
-                    if(val) {
-                        storeStatusMode = val;
-                        updateStatusUI();
-                    }
-                });
 
-                //2. Listen Config (NEW GOJEK STRUCTURE)
-                db.ref('bubur_grace/config').on('value', (snapshot) => {
-                    const config = snapshot.val();
-                    if(config && config.schedule) {
-                        renderScheduleUI(config.schedule);
+                /* Test koneksi dengan sekali baca */
+                var connRef = db.ref('.info/connected');
+                var connTimeout = setTimeout(function(){
+                    showError('Timeout — tidak ada respons dari Firebase dalam 8 detik.', 'Koneksi internet mungkin lambat atau Firebase RTDB sedang down. Coba lagi beberapa saat.');
+                }, 8000);
+
+                connRef.once('value', function(snap){
+                    clearTimeout(connTimeout);
+                    var connected = snap.val();
+                    if(connected === true){
+                        firebaseReady = true;
+                        startListeners();
                     } else {
-                        // Default config jika DB kosong
-                        const defaultSchedule = {
-                            0: { isOpen: true, open: "06:00", close: "12:00" },
-                            1: { isOpen: false, open: "", close: "" }, // Senin Libur
-                            2: { isOpen: true, open: "06:00", close: "12:00" },
-                            3: { isOpen: true, open: "06:00", close: "12:00" },
-                            4: { isOpen: true, open: "06:00", close: "12:00" },
-                            5: { isOpen: true, open: "06:00", close: "12:00" },
-                            6: { isOpen: true, open: "06:00", close: "12:00" }, // Sabtu
-                        };
-                        renderScheduleUI(defaultSchedule);
+                        showError('Firebase terputus (connected: false).', 'Koneksi internet terputus sementara. Coba cek koneksi lalu klik "Coba Lagi".');
                     }
-                });
-
-                //3. Listen Stock Harian
-                db.ref('bubur_grace/stock').on('value', (snapshot) => {
-                    const data = snapshot.val();
-                    stockData = data || {};
-                    renderStockLists();
-                });
-
-                //4. Listen Stock Weekend
-                db.ref('bubur_grace/weekendStock').on('value', (snapshot) => {
-                    const data = snapshot.val();
-                    weekendStockData = data || {};
-                    renderStockLists();
-                });
-
-                // 5. LISTEN DAILY STATS (PERSISTENT OMSET)
-                db.ref('bubur_grace/daily_stats').on('value', (snapshot) => {
-                    const data = snapshot.val();
-                    if(data) {
-                        document.getElementById('statOmset').innerText = formatRupiah(data.total || 0);
-                        document.getElementById('statOrders').innerText = data.count || 0;
+                }, function(err){
+                    clearTimeout(connTimeout);
+                    var msg = err.message || String(err);
+                    if(msg.indexOf('permission') !== -1){
+                        showError('Akses ditolak oleh Firebase Rules.', 'Rules di Firebase Console mungkin belum diatur. Pastikan rules mengizinkan baca/tulis untuk path "bubur_grace/".\n\nError: ' + msg);
                     } else {
-                        document.getElementById('statOmset').innerText = "Rp 0";
-                        document.getElementById('statOrders').innerText = "0";
+                        showError('Gagal terhubung ke Firebase Realtime Database.', msg);
                     }
                 });
 
-                // 6. LISTEN HISTORY PESANAN
-                listenForOrders();
-
-                renderStockLists();
-
-            } catch (e) {
-                alert("Gagal koneksi ke Firebase. Cek Console.");
-                console.error(e);
+            } catch(dbErr){
+                showError('Gagal membuat koneksi database.', dbErr.message || String(dbErr));
             }
         }
 
-        // --- NEW: RENDER SCHEDULE UI (GOJEK STYLE) ---
-        const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-
-        function renderScheduleUI(scheduleData) {
-            const container = document.getElementById('scheduleContainer');
-            container.innerHTML = '';
-
-            for(let i=0; i<7; i++) {
-                const dayConf = scheduleData[i] || { isOpen: true, open: "06:00", close: "12:00" }; // Fallback
-                
-                const isOpen = dayConf.isOpen;
-                const checked = isOpen ? 'checked' : '';
-                const disabledAttr = isOpen ? '' : 'disabled';
-                const opacityStyle = isOpen ? '1' : '0.5';
-
-                const div = document.createElement('div');
-                div.className = 'day-schedule-row';
-                div.style.opacity = opacityStyle;
-
-                div.innerHTML = `
-                    <div class="day-name">${dayNames[i]}</div>
-                    <div class="time-input-group">
-                        <input type="time" id="time-open-${i}" value="${dayConf.open}" ${disabledAttr}>
-                        <span class="time-separator">-</span>
-                        <input type="time" id="time-close-${i}" value="${dayConf.close}" ${disabledAttr}>
-                    </div>
-                    <div class="switch-container">
-                        <label class="switch">
-                            <input type="checkbox" id="day-toggle-${i}" ${checked}>
-                            <span class="slider"></span>
-                        </label>
-                        <div class="status-label">${isOpen ? 'Buka' : 'Tutup'}</div>
-                    </div>
-                `;
-
-                container.appendChild(div);
-
-                // Add Event Listener for Toggle to enable/disable inputs immediately
-                const toggle = document.getElementById(`day-toggle-${i}`);
-                const openInput = document.getElementById(`time-open-${i}`);
-                const closeInput = document.getElementById(`time-close-${i}`);
-                const statusLabel = toggle.parentElement.nextElementSibling;
-
-                toggle.addEventListener('change', () => {
-                    const isChecked = toggle.checked;
-                    if(isChecked) {
-                        openInput.disabled = false;
-                        closeInput.disabled = false;
-                        openInput.value = "06:00";
-                        closeInput.value = "12:00";
-                        statusLabel.innerText = "Buka";
-                    } else {
-                        openInput.disabled = true;
-                        closeInput.disabled = true;
-                        openInput.value = "";
-                        closeInput.value = "";
-                        statusLabel.innerText = "Tutup";
-                    }
-                });
-            }
+        function showError(summary, detail){
+            document.getElementById('errorDetail').textContent = summary + '\n\n' + (detail || '');
+            document.getElementById('errorPanel').classList.add('show');
+            console.error('[Firebase Error]', summary, detail);
         }
 
-        // --- NEW: SAVE CONFIG (GOJEK STYLE) ---
-        function saveConfig() {
-            const newSchedule = {};
+        /* Tombol Retry */
+        document.getElementById('btnRetry').addEventListener('click', function(){
+            var btn = this;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menghubungkan...';
             
-            for(let i=0; i<7; i++) {
-                const isChecked = document.getElementById(`day-toggle-${i}`).checked;
-                
-                if(isChecked) {
-                    const openTime = document.getElementById(`time-open-${i}`).value;
-                    const closeTime = document.getElementById(`time-close-${i}`).value;
-                    
-                    newSchedule[i] = {
-                        isOpen: true,
-                        open: openTime || "06:00",
-                        close: closeTime || "12:00"
-                    };
-                } else {
-                    newSchedule[i] = {
-                        isOpen: false,
-                        open: "",
-                        close: ""
-                    };
-                }
-            }
-
-            db.ref('bubur_grace/config').set({ schedule: newSchedule }, (error) => {
-                if(error) {
-                    showToast("Gagal menyimpan!", "error");
-                } else {
-                    showToast("Jam Operasional Berhasil Disimpan!");
-                }
-            });
-        }
-
-        // --- DASHBOARD STATS LOGIC ---
-        function listenForOrders() {
-            db.ref('bubur_grace/orders').limitToLast(100).on('value', (snapshot) => {
-                const data = snapshot.val();
-                allOrdersData = data || {};
-                updateDashboardRecentActivity(data);
-                calculateTopMenu(data); 
-                renderHistoryList(data);
-            });
-        }
-
-        // --- UPDATE DASHBOARD ---
-        function updateDashboardRecentActivity(data) {
-            const recentContainer = document.getElementById('recentActivityList');
-            recentContainer.innerHTML = "";
-            
-            if(!data) {
-                recentContainer.innerHTML = "<p>Belum ada aktivitas hari ini.</p>";
-                return;
-            }
-
-            const now = new Date();
-            const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-            
-            const todaysOrders = Object.entries(data).filter(([key, order]) => order.timestamp >= startOfDay);
-            
-            if(todaysOrders.length === 0) {
-                recentContainer.innerHTML = "<p>Belum ada aktivitas hari ini.</p>";
-                return;
-            }
-
-            const recentOrders = todaysOrders.reverse().slice(0, 3);
-
-            recentOrders.forEach(([key, order]) => {
-                const div = document.createElement('div');
-                div.style.padding = "10px";
-                div.style.borderBottom = "1px solid #eee";
-                const time = new Date(order.timestamp).toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
-                div.innerHTML = `<strong>${time}</strong> - ${order.customerInfo} (${formatRupiah(order.total)})`;
-                recentContainer.appendChild(div);
-            });
-        }
-
-        function calculateTopMenu(data) {
-            if (!data) return;
-
-            const now = new Date();
-            const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-            
-            let itemCounts = {};
-            const orders = Object.entries(data);
-
-            orders.forEach(([key, order]) => {
-                if (order.timestamp && order.timestamp >= startOfDay) {
-                    if(order.items) {
-                        order.items.forEach(item => {
-                            const name = item.name.split('(')[0].trim(); 
-                            itemCounts[name] = (itemCounts[name] || 0) + item.qty;
+            setTimeout(function(){
+                /* Coba ulang dari awal */
+                try {
+                    /* Hapus app yang lama kalau ada */
+                    var oldApp = firebase.apps.find(function(a){ return a.name === '[DEFAULT]'; });
+                    if(oldApp){
+                        oldApp.delete().then(function(){
+                            initFirebase();
+                            btn.disabled = false;
+                            btn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> Coba Lagi';
+                        }).catch(function(){
+                            initFirebase();
+                            btn.disabled = false;
+                            btn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> Coba Lagi';
                         });
-                    }
-                }
-            });
-
-            let topMenu = "-";
-            let maxCount = 0;
-            for (const [name, count] of Object.entries(itemCounts)) {
-                if (count > maxCount) {
-                    maxCount = count;
-                    topMenu = name;
-                }
-            }
-            document.getElementById('statTop').innerText = topMenu !== "-" ? topMenu + ` (${maxCount})` : "-";
-        }
-
-        // --- RESET STATS FUNCTION ---
-        function resetDailyStats() {
-            if(confirm("Tindakan ini akan mereset Omset ke Rp 0 DAN menghapus SEMUA daftar pesanan yang tercatat hari ini.\n\nAnda yakin ingin membersihkan dashboard untuk hari ini?")) {
-                
-                const now = new Date();
-                const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-
-                db.ref('bubur_grace/daily_stats').set({ total: 0, count: 0 });
-
-                db.ref('bubur_grace/orders')
-                    .orderByChild('timestamp')
-                    .startAt(startOfDay)
-                    .once('value', (snapshot) => {
-                        const updates = {};
-                        snapshot.forEach((child) => {
-                            updates[child.key] = null; 
-                        });
-
-                        if (Object.keys(updates).length > 0) {
-                            db.ref('bubur_grace/orders').update(updates)
-                            .then(() => showToast("Omset & Riwayat Hari Ini berhasil di-reset"))
-                            .catch((err) => showToast("Gagal menghapus riwayat", "error"));
-                        } else {
-                            showToast("Omset di-reset (Tidak ada riwayat hari ini)");
-                        }
-                    });
-            }
-        }
-
-        // --- HISTORY LOGIC ---
-        function renderHistoryList(data) {
-            const ordersContainer = document.getElementById('ordersList');
-            ordersContainer.innerHTML = '';
-            
-            if(!data) {
-                ordersContainer.innerHTML = '<div class="empty-history">Belum ada pesanan masuk.</div>';
-                return;
-            }
-
-            const orders = Object.entries(data).reverse();
-
-            orders.forEach(([key, order]) => {
-                const date = new Date(order.timestamp);
-                const timeStr = date.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
-                const dateStr = date.toLocaleDateString('id-ID', {day: 'numeric', month: 'short'});
-
-                let statusBadge = '';
-                let actionButtons = '';
-
-                if (order.status === 'waiting_payment') {
-                    statusBadge = `<span style="color: #F59E0B; font-weight:bold; font-size: 0.8rem; background: #FEF3C7; padding: 2px 6px; border-radius: 4px;">Menunggu Bayar</span>`;
-                    actionButtons = `<button class="btn-complete" onclick="updateOrderStatus('${key}', 'paid')" style="background: var(--success);"><i class="fa-solid fa-check"></i> Terima</button>`;
-                } else if (order.status === 'paid') {
-                    statusBadge = `<span style="color: var(--success); font-weight:bold; font-size: 0.8rem; background: #ECFDF5; padding: 2px 6px; border-radius: 4px;">LUNAS</span>`;
-                    actionButtons = `<button class="btn-complete" onclick="completeOrder('${key}')"><i class="fa-solid fa-check-double"></i> Selesai</button>`;
-                } else {
-                    statusBadge = `<span style="color: var(--primary); font-weight:bold; font-size: 0.8rem; background: #FFF7ED; padding: 2px 6px; border-radius: 4px;">COD / WA</span>`;
-                    actionButtons = `
-                        <button class="btn-complete" onclick="viewReceipt('${key}')"><i class="fa-solid fa-print"></i> Struk</button>
-                        <button class="btn-complete" onclick="completeOrder('${key}')"><i class="fa-solid fa-check"></i> Selesai</button>
-                    `;
-                }
-
-                let itemsHtml = '';
-                order.items.forEach(item => {
-                    itemsHtml += `<div>- ${item.name} (${item.qty}x) ${item.notes ? `<small style='color:#d35400'>*${item.notes}</small>` : ''}</div>`;
-                });
-
-                const card = document.createElement('div');
-                card.style.background = "white"; card.style.borderRadius = "12px"; card.style.padding = "15px"; card.style.marginBottom = "15px"; card.style.border = "1px solid var(--border)";
-                card.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px dashed #eee; padding-bottom:10px;">
-                        <div><strong>#${key.slice(-6).toUpperCase()}</strong><br><small style="color:#888">${dateStr}, ${timeStr}</small></div></div>
-                        <div style="background:#FFF7ED; color:var(--primary); padding:4px 8px; border-radius:4px; font-weight:600;">${order.customerInfo}</div>
-                    </div>
-                    <div style="margin-bottom:10px;">${statusBadge}</div>
-                    <div style="font-size:0.85rem; color:#555; margin-bottom:10px;">${itemsHtml}</div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; background:#F9FAFB; padding:10px; border-radius:8px;">
-                        <div style="font-weight:700;">Total: ${formatRupiah(order.total)}</div>
-                        <div style="display:flex; gap:5px;">${actionButtons}</div>
-                    </div>
-                `;
-                ordersContainer.appendChild(card);
-            });
-        }
-
-        function completeOrder(orderKey) {
-            if(confirm("Tandai pesanan ini sebagai Selesai?")) {
-                db.ref('bubur_grace/orders/' + orderKey).remove()
-                .then(() => showToast("Pesanan Selesai"))
-                .catch((err) => showToast("Gagal menghapus", "error"));
-            }
-        }
-        function updateOrderStatus(key, status) {
-            if(confirm("Konfirmasi pembayaran ini?")) {
-                db.ref('bubur_grace/orders/' + key).update({ status: status })
-                .then(() => showToast("Status Diperbarui"))
-                .catch((err) => showToast("Gagal update status", "error"));
-            }
-        }
-
-        // Receipt View
-        function viewReceipt(key) {
-            const order = allOrdersData[key];
-            if(!order) return;
-
-            const modal = document.getElementById('receiptModal');
-            const body = document.getElementById('receiptBody');
-            const date = new Date(order.timestamp).toLocaleString('id-ID');
-
-            let itemsHtml = '';
-            order.items.forEach(item => {
-                itemsHtml += `
-                    <div class="receipt-row">
-                        <span>${item.name} x${item.qty}</span>
-                        <span>${formatRupiah(item.price * item.qty)}</span>
-                    </div>
-                `;
-            });
-
-            body.innerHTML = `
-                <div style="margin-bottom:10px;">No: #${key.slice(-6).toUpperCase()}</div>
-                <div style="margin-bottom:10px;">Waktu: ${date}</div>
-                <div style="margin-bottom:10px; font-weight:bold;">Pelanggan: ${order.customerInfo}</div>
-                <div style="border-bottom:1px dashed #000; margin-bottom:10px;"></div>
-                ${itemsHtml}
-                <div style="border-top:1px dashed #000; margin-top:10px; padding-top:10px;" class="receipt-row">
-                    <strong>TOTAL</strong>
-                    <strong>${formatRupiah(order.total)}</strong>
-                </div>
-            `;
-            modal.style.display = 'flex';
-        }
-
-        // Export to CSV
-        function exportToCSV() {
-            if(!allOrdersData || Object.keys(allOrdersData).length === 0) {
-                alert("Tidak ada data untuk diexport.");
-                return;
-            }
-
-            const orders = Object.entries(allOrdersData).reverse();
-            let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "Order ID,Tanggal,Jam,Customer,Total,Status,Items\n";
-
-            orders.forEach(([key, order]) => {
-                const date = new Date(order.timestamp);
-                const dateStr = date.toLocaleDateString('id-ID');
-                const timeStr = date.toLocaleTimeString('id-ID');
-                
-                const itemsStr = order.items.map(i => `${i.name} (${i.qty})`).join('; ');
-
-                csvContent += `"${key.slice(-6).toUpperCase()}","${dateStr}","${timeStr}","${order.customerInfo}","${order.total}","${order.status}","${itemsStr}"\n`;
-            });
-
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "Laporan_Pen_BuburGrace.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        function formatRupiah(number) {
-            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
-        }
-
-        // --- UI RENDERING ---
-        function updateStatusUI() {
-            ['auto', 'open', 'close'].forEach(mode => {
-                const el = document.getElementById(`opt-${mode}`);
-                el.classList.remove('active', 'active-green', 'active-red');
-                if (storeStatusMode === mode) {
-                    el.classList.add('active');
-                    if(mode === 'open') el.classList.add('active-green');
-                    if(mode === 'close') el.classList.add('active-red');
-                }
-            });
-        }
-
-        function renderStockLists() {
-            const dailyContainer = document.getElementById('dailyStockList');
-            const weekendContainer = document.getElementById('weekendStockList');
-            
-            dailyContainer.innerHTML = '';
-            weekendContainer.innerHTML = '';
-
-            const categories = [...new Set(menuItems.map(i => i.category))];
-
-            categories.forEach(cat => {
-                const dailyItems = menuItems.filter(i => i.category === cat && !i.isWeekend);
-                const weekendItems = menuItems.filter(i => i.category === cat && i.isWeekend);
-
-                if(dailyItems.length >0) {
-                    const catHeader = `<div class="category-label">${cat}</div>`;
-                    dailyContainer.insertAdjacentHTML('beforeend', catHeader);
-                    dailyItems.forEach(item => dailyContainer.appendChild(createStockItem(item)));
-                }
-
-                if(weekendItems.length >0) {
-                    const catHeader = `<div class="category-label">${cat}</div>`;
-                    weekendContainer.insertAdjacentHTML('beforeend', catHeader);
-                    weekendItems.forEach(item => weekendContainer.appendChild(createStockItem(item)));
-                }
-            });
-        }
-
-        function filterStockList(type) {
-            const searchVal = (type === 'daily' ? document.getElementById('dailySearch').value : document.getElementById('weekendSearch').value).toLowerCase();
-            const container = (type === 'daily' ? document.getElementById('dailyStockList') : document.getElementById('weekendStockList'));
-            const items = container.querySelectorAll('.stock-item');
-            const labels = container.querySelectorAll('.category-label');
-
-            items.forEach(item => {
-                const name = item.querySelector('.item-info h4').innerText.toLowerCase();
-                if(name.includes(searchVal)) {
-                    item.style.display = 'flex';
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-
-            labels.forEach(label => {
-                let next = label.nextElementSibling;
-                let hasVisible = false;
-                while(next && next.classList.contains('stock-item')) {
-                    if(next.style.display !== 'none') hasVisible = true;
-                    next = next.nextElementSibling;
-                }
-                label.style.display = hasVisible ? 'block' : 'none';
-            });
-        }
-
-        // --- CREATE STOCK ITEM (FIXED: 0 = UNLIMITED) --- */
-        function createStockItem(item) {
-            const isWeekendItem = item.isWeekend;
-            const data = isWeekendItem ? weekendStockData : stockData;
-            const keyToCheck = item.name.trim(); 
-            
-            const currentStock = (data[keyToCheck] !== undefined) ? data[keyToCheck] : null;
-            
-            const isUnlimited = (currentStock === null || currentStock === undefined || currentStock === 0);
-
-            const div = document.createElement('div');
-            div.className = 'stock-item';
-            
-            let statusHtml = '';
-            let inputValue = '';
-            
-            if(isUnlimited) {
-                statusHtml = `<span class="unlimited-badge">UNLIMITED</span>`;
-                inputValue = ''; 
-            } else {
-                inputValue = currentStock;
-            }
-
-            div.innerHTML = `
-                <div class="item-info">
-                    <h4>${item.name}</h4>
-                </div>
-                <div class="stock-control-wrapper">
-                    ${statusHtml}
-                    <input type="number" class="stock-input" id="stock-${keyToCheck.replace(/\s/g, '-')}" value="${inputValue}" placeholder="0" min="0">
-                    <i class="fa-solid fa-check stock-indicator" id="ind-${keyToCheck.replace(/\s/g, '-')}"></i>
-                </div>
-            `;
-
-            const input = div.querySelector('input');
-            const indicator = div.querySelector('.stock-indicator');
-
-            const saveStock = () => {
-                let val = input.value.trim();
-                let newValue = null; 
-                
-                if (val !== "") {
-                    newValue = parseInt(val);
-                    if (isNaN(newValue) || newValue < 0) newValue = 0;
-                }
-                
-                const path = isWeekendItem ? 'bubur_grace/weekendStock/' : 'bubur_grace/stock/';
-                
-                db.ref(path + item.name).set(newValue, (error) => {
-                    if(error) {
-                        showToast("Gagal menyimpan!", "error");
-                        indicator.style.color = 'var(--danger)';
                     } else {
-                        indicator.classList.add('show');
-                        setTimeout(() => indicator.classList.remove('show'), 1500);
-                        renderStockLists(); 
+                        initFirebase();
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> Coba Lagi';
                     }
-                });
-            };
-
-            input.addEventListener('blur', saveStock);
-            input.addEventListener('keypress', (e) => {
-                if(e.key === 'Enter') {
-                    input.blur();
+                } catch(e){
+                    initFirebase();
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> Coba Lagi';
                 }
-            });
-
-            return div;
-        }
-
-        function switchTab(tabName) {
-            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-            event.currentTarget.classList.add('active');
-            document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
-            document.getElementById(`tab-${tabName}`).style.display = 'block';
-        }
-
-        function setStoreStatus(mode) {
-            if(db) {
-                db.ref('bubur_grace/status').set(mode);
-                storeStatusMode = mode;
-                updateStatusUI();
-                showToast(`Mode diubah ke: ${mode.toUpperCase()}`);
-            }
-        }
-
-        function showToast(msg, type="success") {
-            const t = document.getElementById("toast");
-            t.innerText = msg;
-            t.style.background = type === "error" ? "#EF4444" : "#333";
-            t.className = "show";
-            setTimeout(() => { t.className = t.className.replace("show", ""); }, 3000);
-        }
-
-        document.getElementById('adminPassword').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') attemptLogin();
+            }, 1000);
         });
+
+        /* ==============================================
+           START LISTENERS — dipanggil setelah Firebase siap
+        ============================================== */
+        function startListeners(){
+            document.getElementById('errorPanel').classList.remove('show');
+
+            /* 1. Mode override */
+            db.ref('bubur_grace/status').on('value', function(s){
+                storeMode = s.val() || 'auto';
+                refreshModeUI();
+                tickStatus();
+            });
+
+            /* 2. Jadwal */
+            db.ref('bubur_grace/config/schedule').on('value', function(s){
+                var raw = s.val();
+                if(raw !== null && typeof raw === 'object'){
+                    scheduleData = {};
+                    for(var i=0;i<7;i++){
+                        var e = raw[i] !== undefined ? raw[i] : (raw[String(i)] !== undefined ? raw[String(i)] : null);
+                        if(e && typeof e === 'object'){
+                            scheduleData[i] = { isOpen: !!e.isOpen, open: e.open||'', close: e.close||'' };
+                        } else {
+                            scheduleData[i] = { isOpen: false, open: '', close: '' };
+                        }
+                    }
+                } else {
+                    scheduleData = JSON.parse(JSON.stringify(DEFAULT_SCHED));
+                    db.ref('bubur_grace/config').set({ schedule: scheduleData });
+                }
+                renderScheduleUI(scheduleData);
+                tickStatus();
+            });
+
+            /* 3. Stock */
+            db.ref('bubur_grace/stock').on('value', function(s){ stockData = s.val()||{}; renderAllStock(); });
+            db.ref('bubur_grace/weekendStock').on('value', function(s){ weekendStockData = s.val()||{}; renderAllStock(); });
+
+            /* 4. Stats */
+            db.ref('bubur_grace/daily_stats').on('value', function(s){
+                var d=s.val();
+                document.getElementById('statOmset').innerText = d ? fmtRp(d.total||0) : 'Rp 0';
+                document.getElementById('statOrders').innerText = d ? (d.count||0) : '0';
+            });
+
+            /* 5. Orders */
+            db.ref('bubur_grace/orders').limitToLast(100).on('value', function(s){
+                allOrders = s.val()||{};
+                refreshActivity();
+                refreshTopMenu();
+                renderHistory();
+            });
+
+            renderAllStock();
+            showToast('Firebase terhubung!');
+        }
+
+        /* ==============================================
+           REAL-TIME STATUS ENGINE
+        ============================================== */
+        function tickStatus(){
+            if(!scheduleData) return;
+
+            var now = new Date();
+            var todayIdx = now.getDay();
+            var curMin = now.getHours() * 60 + now.getMinutes();
+            var today = scheduleData[todayIdx];
+
+            var state = 'closed';
+            var detail = '';
+
+            if(storeMode === 'close'){
+                state = 'closed';
+                detail = 'Mode Paksa Tutup aktif';
+            } else if(storeMode === 'open'){
+                state = 'open';
+                detail = 'Mode Paksa Buka aktif — semua menu termasuk Weekend';
+            } else {
+                if(!today || !today.isOpen){
+                    state = 'closed';
+                    var nx = findNext(todayIdx);
+                    detail = nx ? 'Hari ini (' + DAYS[todayIdx] + ') libur — buka ' + DAYS[nx.d] + ' ' + fmtT(nx.o) : 'Hari ini (' + DAYS[todayIdx] + ') libur';
+                } else {
+                    var oMin = toMin(today.open);
+                    var cMin = toMin(today.close);
+                    if(curMin < oMin){
+                        state = 'waiting';
+                        detail = 'Belum buka — buka jam ' + fmtT(today.open) + ' (tutup jam ' + fmtT(today.close) + ')';
+                    } else if(curMin >= oMin && curMin < cMin){
+                        state = 'open';
+                        detail = 'Buka sekarang — sampai jam ' + fmtT(today.close) + ' (' + fmtT(today.open) + ' - ' + fmtT(today.close) + ')';
+                    } else {
+                        state = 'closed';
+                        var nx2 = findNext(todayIdx);
+                        detail = nx2 ? 'Sudah tutup (' + fmtT(today.close) + ') — buka ' + DAYS[nx2.d] + ' ' + fmtT(nx2.o) : 'Sudah tutup (' + fmtT(today.close) + ')';
+                    }
+                }
+            }
+
+            var card = document.getElementById('liveCard');
+            var icon = document.getElementById('liveIcon');
+            var txt = document.getElementById('liveStatusText');
+            var dot = document.getElementById('liveDot');
+            var dtxt = document.getElementById('liveDetailText');
+
+            card.className = 'live-card card-' + state;
+            icon.className = 'live-icon-box ic-' + state;
+            icon.innerHTML = state==='open' ? '<i class="fa-solid fa-store"></i>' : state==='waiting' ? '<i class="fa-solid fa-hourglass-half"></i>' : '<i class="fa-solid fa-store-slash"></i>';
+            txt.className = 'live-status s-' + state;
+            txt.textContent = state==='open' ? 'BUKA' : state==='waiting' ? 'SEGERA BUKA' : 'TUTUP';
+            dot.className = 'live-dot d-' + state;
+            dtxt.textContent = detail;
+        }
+
+        setInterval(function(){
+            var n=new Date();
+            document.getElementById('liveClock').textContent = String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0');
+        }, 1000);
+        setInterval(tickStatus, 10000);
+
+        function findNext(fromIdx){
+            for(var i=1;i<=7;i++){var idx=(fromIdx+i)%7;var c=scheduleData[idx];if(c&&c.isOpen&&c.open) return {d:idx,o:c.open};}
+            return null;
+        }
+        function toMin(s){if(!s) return 0;var p=s.split(':');return (parseInt(p[0])||0)*60+(parseInt(p[1])||0);}
+        function fmtT(s){
+            if(!s) return '-';var p=s.split(':');var h=parseInt(p[0])||0,m=parseInt(p[1])||0;var hr=h,per='';
+            if(h===0){hr=12;per='malam';}else if(h<11){per='pagi';}else if(h<15){per='siang';}else if(h<18){per='sore';}else{hr=h-12;per='malam';}
+            return hr+'.'+String(m).padStart(2,'0')+' '+per;
+        }
+
+        /* ==============================================
+           MODE OVERRIDE UI
+        ============================================== */
+        function refreshModeUI(){
+            var opts = document.querySelectorAll('.mode-opt');
+            for(var i=0;i<opts.length;i++) opts[i].className = 'mode-opt';
+            if(storeMode==='auto') document.getElementById('opt-auto').classList.add('sel-auto');
+            else if(storeMode==='open') document.getElementById('opt-open').classList.add('sel-open');
+            else document.getElementById('opt-close').classList.add('sel-close');
+        }
+
+        document.addEventListener('click', function(e){
+            var opt = e.target.closest('.mode-opt');
+            if(!opt) return;
+            var m = opt.getAttribute('data-mode');
+            if(!m || !db) return;
+            db.ref('bubur_grace/status').set(m, function(err){
+                if(err) showToast('Gagal!',true);
+                else { var lb={auto:'Otomatis',open:'Paksa Buka',close:'Paksa Tutup'}; showToast('Mode: '+lb[m]); }
+            });
+        });
+
+        /* ==============================================
+           SCHEDULE EDITOR
+        ============================================== */
+        function renderScheduleUI(data){
+            var c = document.getElementById('schedContainer');c.innerHTML='';
+            var todayIdx = new Date().getDay();
+            for(var i=0;i<7;i++){
+                var conf=data[i]||{isOpen:false,open:'',close:''};
+                var isToday=(i===todayIdx);var isOpen=!!conf.isOpen;
+                var row=document.createElement('div');
+                row.className='sched-row'+(isToday?' is-today':'')+(!isOpen?' is-closed-row':'');
+                row.innerHTML='<div class="sched-day">'+DAYS[i]+'<span class="today-badge">HARI INI</span></div>'+
+                    '<div class="sched-times '+(isOpen?'':'tg-off')+'" id="tg'+i+'"><input type="time" id="o'+i+'" value="'+(conf.open||'06:00')+'" '+(isOpen?'':'disabled')+'><span class="time-dash">\u2013</span><input type="time" id="c'+i+'" value="'+(conf.close||'12:00')+'" '+(isOpen?'':'disabled')+'></div>'+
+                    '<div class="sched-closed-text '+(isOpen?'':'show')+'" id="cl'+i+'">Tutup</div>'+
+                    '<div class="sched-sw"><label class="switch"><input type="checkbox" id="sw'+i+'" '+(isOpen?'checked':'')+'><span class="slider"></span></label><span class="sw-label" id="sl'+i+'">'+(isOpen?'Buka':'Tutup')+'</span></div>';
+                c.appendChild(row);
+            }
+            c.onclick = function(e){
+                var sw=e.target.closest('input[type="checkbox"]');if(!sw) return;
+                var id=sw.id;if(id.indexOf('sw')!==0) return;
+                var idx=parseInt(id.substring(2));if(isNaN(idx)) return;
+                var on=sw.checked;
+                var tg=document.getElementById('tg'+idx),cl=document.getElementById('cl'+idx),sl=document.getElementById('sl'+idx);
+                var oi=document.getElementById('o'+idx),ci=document.getElementById('c'+idx);
+                var row=sw.closest('.sched-row');
+                if(on){tg.classList.remove('tg-off');cl.classList.remove('show');sl.textContent='Buka';oi.disabled=false;ci.disabled=false;if(!oi.value)oi.value='06:00';if(!ci.value)ci.value='12:00';row.classList.remove('is-closed-row');}
+                else{tg.classList.add('tg-off');cl.classList.add('show');sl.textContent='Tutup';oi.disabled=true;ci.disabled=true;row.classList.add('is-closed-row');}
+            };
+        }
+
+        document.getElementById('btnSaveSched').addEventListener('click',function(){
+            if(!db){showToast('Firebase belum terhubung!',true);return;}
+            var ns={};
+            for(var i=0;i<7;i++){
+                var sw=document.getElementById('sw'+i),oi=document.getElementById('o'+i),ci=document.getElementById('c'+i);
+                if(!sw||!oi||!ci){ns[i]={isOpen:false,open:'',close:''};continue;}
+                if(sw.checked) ns[i]={isOpen:true,open:oi.value||'06:00',close:ci.value||'12:00'};
+                else ns[i]={isOpen:false,open:'',close:''};
+            }
+            db.ref('bubur_grace/config').set({schedule:ns},function(err){
+                if(err) showToast('Gagal menyimpan!',true);
+                else showToast('Jadwal disimpan! Status toko ikut berubah otomatis.');
+            });
+        });
+
+        /* ==============================================
+           DASHBOARD STATS
+        ============================================== */
+        function refreshActivity(){
+            var el=document.getElementById('recentActivityList');el.innerHTML='';
+            if(!allOrders||!Object.keys(allOrders).length){el.innerHTML='<div class="activity-item">Belum ada aktivitas hari ini.</div>';return;}
+            var start=new Date();start.setHours(0,0,0,0);var startTs=start.getTime();var arr=[];
+            var keys=Object.keys(allOrders);
+            for(var k=0;k<keys.length;k++){var o=allOrders[keys[k]];if(o.timestamp&&o.timestamp>=startTs)arr.push(o);}
+            arr.sort(function(a,b){return b.timestamp-a.timestamp;});arr=arr.slice(0,5);
+            if(!arr.length){el.innerHTML='<div class="activity-item">Belum ada aktivitas hari ini.</div>';return;}
+            for(var i=0;i<arr.length;i++){
+                var o=arr[i];var div=document.createElement('div');div.className='activity-item';
+                var t=new Date(o.timestamp).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+                div.innerHTML='<strong>'+t+'</strong> \u2014 '+o.customerInfo+' <span style="color:var(--primary);font-weight:600;">('+fmtRp(o.total)+')</span>';
+                el.appendChild(div);
+            }
+        }
+
+        function refreshTopMenu(){
+            if(!allOrders) return;
+            var start=new Date();start.setHours(0,0,0,0);var startTs=start.getTime();var counts={};
+            var keys=Object.keys(allOrders);
+            for(var k=0;k<keys.length;k++){var o=allOrders[keys[k]];if(o.timestamp&&o.timestamp>=startTs&&o.items){for(var j=0;j<o.items.length;j++){var n=o.items[j].name.split('(')[0].trim();counts[n]=(counts[n]||0)+o.items[j].qty;}}}
+            var top='-',tc=0;for(var n in counts){if(counts[n]>tc){tc=counts[n];top=n;}}
+            document.getElementById('statTop').innerText=top!=='-'?top+' ('+tc+')':'-';
+        }
+
+        document.getElementById('btnResetStats').addEventListener('click',function(){
+            if(!confirm('Reset Omset ke Rp 0 DAN hapus pesanan hari ini?')) return;
+            if(!db){showToast('Firebase belum terhubung!',true);return;}
+            var start=new Date();start.setHours(0,0,0,0);var startTs=start.getTime();
+            db.ref('bubur_grace/daily_stats').set({total:0,count:0});
+            db.ref('bubur_grace/orders').orderByChild('timestamp').startAt(startTs).once('value',function(s){
+                var u={};s.forEach(function(c){u[c.key]=null;});
+                if(Object.keys(u).length>0){db.ref('bubur_grace/orders').update(u).then(function(){showToast('Berhasil di-reset');}).catch(function(){showToast('Gagal',true);});}
+                else showToast('Berhasil di-reset');
+            });
+        });
+
+        /* ==============================================
+           STOCK
+        ============================================== */
+        function renderAllStock(){
+            renderStockGroup('dailyStockList',menuItems.filter(function(m){return !m.isWeekend;}),stockData,'daily');
+            renderStockGroup('weekendStockList',menuItems.filter(function(m){return m.isWeekend;}),weekendStockData,'weekend');
+        }
+
+        function renderStockGroup(cid,items,data,type){
+            var c=document.getElementById(cid);c.innerHTML='';var grp={};
+            for(var i=0;i<items.length;i++){var cat=items[i].category;if(!grp[cat])grp[cat]=[];grp[cat].push(items[i]);}
+            for(var cat in grp){
+                var gd=document.createElement('div');gd.className='stock-category-group';
+                var lb=document.createElement('div');lb.className='category-label';lb.textContent=cat;gd.appendChild(lb);
+                var arr=grp[cat];
+                for(var j=0;j<arr.length;j++){
+                    var item=arr[j];var raw=data[item.name];var limited=(raw!==undefined&&raw!==null&&raw!=='');var num=limited?(parseInt(raw)||0):0;
+                    var div=document.createElement('div');div.className='stock-item';div.setAttribute('data-name',item.name.toLowerCase());
+                    div.innerHTML='<div class="item-info"><h4>'+item.name+'</h4></div><div class="stock-control-wrapper"><input type="number" class="stock-input" data-menu="'+item.name+'" data-type="'+type+'" value="'+(limited?num:'')+'" placeholder="\u221E" min="0">'+(limited?'':'<span class="unlimited-badge">Unlimited</span>')+'</div>';
+                    gd.appendChild(div);
+                }
+                c.appendChild(gd);
+            }
+        }
+
+        document.addEventListener('change',function(e){
+            if(!e.target.classList.contains('stock-input'))return;
+            if(!db){showToast('Firebase belum terhubung!',true);e.target.value='';return;}
+            var inp=e.target;var name=inp.getAttribute('data-menu');var type=inp.getAttribute('data-type');var val=inp.value.trim();
+            var ref=type==='weekend'?'bubur_grace/weekendStock':'bubur_grace/stock';var key=name.replace(/\//g,'_').replace(/\./g,'_');
+            if(val===''){db.ref(ref+'/'+key).remove();inp.value='';var wr=inp.parentElement;var ex=wr.querySelector('.unlimited-badge');if(!ex){var b=document.createElement('span');b.className='unlimited-badge';b.textContent='Unlimited';wr.appendChild(b);}showToast(name+' \u2192 Unlimited');}
+            else{var n=Math.max(0,parseInt(val)||0);inp.value=n;db.ref(ref+'/'+key).set(n);var wr2=inp.parentElement;var ex2=wr2.querySelector('.unlimited-badge');if(ex2)ex2.remove();showToast(name+' \u2192 Stok '+n);}
+        });
+
+        document.getElementById('dailySearch').addEventListener('input',function(){filterStock('daily');});
+        document.getElementById('weekendSearch').addEventListener('input',function(){filterStock('weekend');});
+        function filterStock(type){
+            var q=document.getElementById(type+'Search').value.toLowerCase().trim();var c=document.getElementById(type+'StockList');var gs=c.querySelectorAll('.stock-category-group');
+            for(var g=0;g<gs.length;g++){var items=gs[g].querySelectorAll('.stock-item');var vis=false;for(var i=0;i<items.length;i++){var n=items[i].getAttribute('data-name')||'';var m=!q||n.indexOf(q)!==-1;items[i].style.display=m?'':'none';if(m)vis=true;}gs[g].style.display=vis?'':'none';}
+        }
+
+        /* ==============================================
+           HISTORY
+        ============================================== */
+        function renderHistory(){
+            var c=document.getElementById('ordersList');c.innerHTML='';
+            if(!allOrders||!Object.keys(allOrders).length){c.innerHTML='<div style="text-align:center;padding:30px;color:#999;">Belum ada pesanan.</div>';return;}
+            var keys=Object.keys(allOrders).reverse();
+            for(var k=0;k<keys.length;k++){
+                var key=keys[k];var o=allOrders[key];var d=new Date(o.timestamp);var ts=d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});var ds=d.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});
+                var sb='',ab='';
+                if(o.status==='waiting_payment'){sb='<span style="color:#F59E0B;font-weight:bold;font-size:0.8rem;background:#FEF3C7;padding:2px 8px;border-radius:4px;">Menunggu Bayar</span>';ab='<button class="btn-complete" data-act="accept" data-key="'+key+'"><i class="fa-solid fa-check"></i> Terima</button>';}
+                else if(o.status==='paid'){sb='<span style="color:var(--success);font-weight:bold;font-size:0.8rem;background:#ECFDF5;padding:2px 8px;border-radius:4px;">LUNAS</span>';ab='<button class="btn-complete" data-act="done" data-key="'+key+'"><i class="fa-solid fa-check-double"></i> Selesai</button>';}
+                else{sb='<span style="color:var(--primary);font-weight:bold;font-size:0.8rem;background:#FFF7ED;padding:2px 8px;border-radius:4px;">COD/WA</span>';ab='<button class="btn-complete" data-act="receipt" data-key="'+key+'" style="background:var(--secondary);"><i class="fa-solid fa-print"></i> Struk</button><button class="btn-complete" data-act="done" data-key="'+key+'"><i class="fa-solid fa-check"></i> Selesai</button>';}
+                var ih='';if(o.items)for(var j=0;j<o.items.length;j++){var it=o.items[j];ih+='<div style="font-size:0.85rem;color:#555;">- '+it.name+' ('+it.qty+'x)'+(it.notes?' <small style="color:#D35400;">*'+it.notes+'</small>':'')+'</div>';}
+                var card=document.createElement('div');card.className='order-card';
+                card.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;border-bottom:1px dashed #eee;padding-bottom:10px;flex-wrap:wrap;gap:5px;"><div><strong style="font-size:0.95rem;">'+o.customerInfo+'</strong><div style="font-size:0.78rem;color:#999;">'+ds+' \u00b7 '+ts+'</div></div><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">'+sb+'<strong style="font-size:1rem;color:var(--primary);">'+fmtRp(o.total)+'</strong></div></div>'+ih+(o.customerNote?'<div style="font-size:0.8rem;color:#888;margin-top:6px;"><i class="fa-solid fa-note-sticky" style="margin-right:4px;"></i>'+o.customerNote+'</div>':'')+'<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">'+ab+'</div>';
+                c.appendChild(card);
+            }
+        }
+
+        document.getElementById('ordersList').addEventListener('click',function(e){
+            var b=e.target.closest('[data-act]');if(!b||!db) return;
+            var act=b.getAttribute('data-act'),key=b.getAttribute('data-key');
+            if(act==='accept'){db.ref('bubur_grace/orders/'+key+'/status').set('paid');showToast('Diterima');}
+            else if(act==='done'){db.ref('bubur_grace/orders/'+key+'/status').set('completed');showToast('Selesai');}
+            else if(act==='receipt') viewReceipt(key);
+        });
+
+        function viewReceipt(key){
+            var o=allOrders[key];if(!o) return;var b='';
+            if(o.items)for(var i=0;i<o.items.length;i++){var it=o.items[i];b+='<div class="receipt-row"><span>'+it.name+' ('+it.qty+'x)</span><span>'+fmtRp(it.price*it.qty)+'</span></div>';}
+            b+='<div class="receipt-row" style="border-top:1px dashed #000;padding-top:5px;margin-top:5px;font-weight:bold;"><span>TOTAL</span><span>'+fmtRp(o.total)+'</span></div>';
+            b+='<div style="margin-top:10px;font-size:0.8rem;">Nama: '+o.customerInfo+'</div>';
+            if(o.customerNote) b+='<div style="font-size:0.8rem;">Catatan: '+o.customerNote+'</div>';
+            b+='<div style="margin-top:5px;font-size:0.8rem;">'+new Date(o.timestamp).toLocaleString('id-ID')+'</div>';
+            document.getElementById('receiptBody').innerHTML=b;document.getElementById('receiptModal').style.display='flex';
+        }
+        document.getElementById('receiptModal').addEventListener('click',function(e){if(e.target===this)this.style.display='none';});
+        document.getElementById('btnCloseReceipt').addEventListener('click',function(){document.getElementById('receiptModal').style.display='none';});
+
+        document.getElementById('btnExport').addEventListener('click',function(){
+            if(!allOrders||!Object.keys(allOrders).length){showToast('Tidak ada data',true);return;}
+            var csv='Tanggal,Waktu,Nama,Item,Total,Status\n';var keys=Object.keys(allOrders);
+            for(var k=0;k<keys.length;k++){var o=allOrders[keys[k]];var d=new Date(o.timestamp);var its='';
+                if(o.items){var p=[];for(var j=0;j<o.items.length;j++)p.push(o.items[j].name+'('+o.items[j].qty+')');its=p.join('; ');}
+                csv+='"'+d.toLocaleDateString('id-ID')+'","'+d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})+'","'+o.customerInfo+'","'+its+'","'+o.total+'","'+(o.status||'-')+'"\n';
+            }
+            var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download='laporan_'+new Date().toISOString().split('T')[0]+'.csv';a.click();URL.revokeObjectURL(url);showToast('Laporan didownload!');
+        });
+
+        document.getElementById('btnLogout').addEventListener('click',logout);
+
+        function fmtRp(n){return 'Rp '+(n||0).toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.');}
+        function showToast(msg,err){var t=document.getElementById('toast');t.textContent=msg;t.style.backgroundColor=err?'#EF4444':'#333';t.className='show';clearTimeout(t._to);t._to=setTimeout(function(){t.className='';},2500);}
     </script>
 </body>
 </html>
