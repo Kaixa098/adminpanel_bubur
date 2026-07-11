@@ -4,1136 +4,1262 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Admin Panel - Bubur Grace</title>
-    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- FIREBASE SDK — ditambahkan crossorigin untuk menghindari block -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js" crossorigin="anonymous"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js" crossorigin="anonymous"></script>
-
     <style>
-        :root {
-            --primary: #D35400;
-            --primary-dark: #A04000;
-            --bg-body: #F3F4F6;
-            --bg-card: #FFFFFF;
-            --text-main: #1F2937;
-            --text-sub: #6B7280;
-            --success: #10B981;
-            --danger: #EF4444;
-            --border: #E5E7EB;
-            --secondary: #2C3E50;
-            --warning: #F59E0B;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; outline: none; }
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* === LOGIN === */
-        #loginScreen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, var(--primary), #E67E22);
-            z-index: 9999;
-            display: flex; align-items: center; justify-content: center;
-            transition: opacity 0.5s ease;
-        }
-        .login-card {
-            background: white; padding: 40px; border-radius: 20px;
-            width: 90%; max-width: 400px;
-            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-        .login-logo {
-            width: 80px; height: 80px; border-radius: 50%; margin-bottom: 20px;
-            object-fit: cover; border: 4px solid #FFF7ED;
-        }
-        .login-input {
-            width: 100%; padding: 15px; margin: 20px 0;
-            border: 2px solid var(--border); border-radius: 12px;
-            font-size: 1rem; text-align: center; letter-spacing: 2px;
-            transition: 0.3s; font-family: 'Inter', sans-serif;
-        }
-        .login-input:focus { border-color: var(--primary); }
-        .btn-login {
-            width: 100%; padding: 15px; background: var(--primary);
-            color: white; border: none; border-radius: 12px;
-            font-size: 1rem; font-weight: 600; cursor: pointer;
-            transition: background 0.3s; font-family: 'Inter', sans-serif;
-        }
-        .btn-login:hover { background: var(--primary-dark); }
-        .btn-login:active { transform: scale(0.98); }
-        .btn-login:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-        .error-msg { color: var(--danger); font-size: 0.9rem; margin-top: 10px; min-height: 20px; }
-
-        /* === DASHBOARD === */
-        #dashboardScreen { display: none; height: 100%; flex-direction: column; }
-        .admin-header {
-            background: white; padding: 15px 20px;
-            border-bottom: 1px solid var(--border);
-            display: flex; justify-content: space-between; align-items: center;
-            flex-shrink: 0;
-        }
-        .brand { display: flex; align-items: center; gap: 10px; }
-        .brand h2 { font-size: 1.2rem; color: var(--primary); }
-        .btn-logout {
-            background: #FEE2E2; color: var(--danger); border: none;
-            padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer;
-            display: flex; align-items: center; gap: 5px; font-family: 'Inter', sans-serif;
-        }
-        .btn-logout:hover { background: #FECACA; }
-
-        /* === TABS === */
-        .nav-tabs {
-            background: white; display: flex; border-bottom: 1px solid var(--border);
-            padding: 0 10px; overflow-x: auto; flex-shrink: 0;
-        }
-        .nav-tabs::-webkit-scrollbar { display: none; }
-        .nav-tab {
-            padding: 14px 18px; font-weight: 500; color: var(--text-sub);
-            border-bottom: 3px solid transparent; cursor: pointer; white-space: nowrap;
-            transition: 0.3s; font-size: 0.92rem; user-select: none;
-        }
-        .nav-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
-        .nav-tab i { margin-right: 6px; }
-
-        .admin-main {
-            flex-grow: 1; overflow-y: auto; padding: 20px;
-            max-width: 800px; width: 100%; margin: 0 auto;
-        }
-
-        /* === STATS === */
-        .stats-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px; margin-bottom: 25px;
-        }
-        .stat-card {
-            background: white; padding: 20px; border-radius: 16px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); text-align: center;
-            border: 1px solid var(--border);
-        }
-        .stat-value { font-size: 1.8rem; font-weight: 700; color: var(--primary); margin-bottom: 5px; }
-        .stat-label { font-size: 0.8rem; color: var(--text-sub); font-weight: 600; text-transform: uppercase; }
-        .btn-reset-stats {
-            width: 100%; background: #FEF2F2; color: var(--danger);
-            border: 1px dashed #EF4444; padding: 10px; border-radius: 10px;
-            font-size: 0.9rem; font-weight: 600; cursor: pointer; margin-top: 10px; margin-bottom: 20px;
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-            font-family: 'Inter', sans-serif;
-        }
-
-        /* === SEARCH === */
-        .search-container {
-            margin-bottom: 20px; position: sticky; top: 0; z-index: 10;
-            background: var(--bg-body); padding-bottom: 5px;
-        }
-        .search-wrapper {
-            display: flex; align-items: center; background: white; border: 1px solid var(--border);
-            border-radius: 12px; padding: 0 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        .search-wrapper:focus-within { border-color: var(--primary); box-shadow: 0 4px 12px rgba(211,84,0,0.15); }
-        .search-wrapper i { color: #9CA3AF; margin-right: 10px; }
-        .search-wrapper input { border: none; width: 100%; padding: 14px 0; font-size: 1rem; font-family: 'Inter', sans-serif; }
-        .search-wrapper input:focus { outline: none; }
-
-        .section-title {
-            font-size: 1.1rem; font-weight: 700; margin-bottom: 15px;
-            display: flex; align-items: center; gap: 10px; color: var(--text-main);
-        }
-
-        /* === LIVE STATUS === */
-        .live-card {
-            border-radius: 16px; padding: 20px; margin-bottom: 20px;
-            border: 2px solid var(--border); overflow: hidden;
-            position: relative; transition: border-color 0.5s, background 0.5s;
-        }
-        .live-card.card-open { border-color: #6ee7b7; background: #f0fdf4; }
-        .live-card.card-closed { border-color: #fca5a5; background: #fef2f2; }
-        .live-card.card-waiting { border-color: #fcd34d; background: #fffbeb; }
-
-        .live-card-top { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
-        .live-icon-box {
-            width: 50px; height: 50px; border-radius: 14px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.3rem; flex-shrink: 0; transition: all 0.4s;
-        }
-        .live-icon-box.ic-open { background: #d1fae5; color: #059669; }
-        .live-icon-box.ic-closed { background: #fee2e2; color: #dc2626; }
-        .live-icon-box.ic-waiting { background: #fef3c7; color: #d97706; }
-
-        .live-info { flex: 1; min-width: 0; }
-        .live-label { font-size: 0.7rem; color: var(--text-sub); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-        .live-status { font-size: 1.15rem; font-weight: 800; margin-top: 2px; transition: color 0.4s; }
-        .live-status.s-open { color: #059669; }
-        .live-status.s-closed { color: #dc2626; }
-        .live-status.s-waiting { color: #d97706; }
-
-        .live-dot {
-            width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; transition: all 0.4s;
-        }
-        .live-dot.d-open { background: #10b981; animation: pulseDot 2s infinite; }
-        .live-dot.d-closed { background: #ef4444; }
-        .live-dot.d-waiting { background: #f59e0b; animation: pulseDotY 2s infinite; }
-        @keyframes pulseDot {
-            0% { box-shadow: 0 0 0 0 rgba(16,185,129,0.5); }
-            70% { box-shadow: 0 0 0 8px rgba(16,185,129,0); }
-            100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
-        }
-        @keyframes pulseDotY {
-            0% { box-shadow: 0 0 0 0 rgba(245,158,11,0.4); }
-            70% { box-shadow: 0 0 0 8px rgba(245,158,11,0); }
-            100% { box-shadow: 0 0 0 0 rgba(245,158,11,0); }
-        }
-
-        .live-detail {
-            display: flex; align-items: center; gap: 8px;
-            font-size: 0.85rem; color: var(--text-sub); font-weight: 500;
-            background: rgba(255,255,255,0.7); padding: 8px 12px; border-radius: 8px;
-        }
-        .live-detail i { color: var(--primary); }
-        .live-clock {
-            margin-left: auto; font-size: 0.82rem; font-weight: 700;
-            color: var(--secondary); font-variant-numeric: tabular-nums;
-        }
-
-        /* === MODE OVERRIDE === */
-        .override-card {
-            background: white; border-radius: 16px; padding: 20px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 20px;
-            border: 1px solid var(--border);
-        }
-        .override-desc { font-size: 0.85rem; color: #6b7280; line-height: 1.6; margin-bottom: 16px; }
-        .mode-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .mode-opt {
-            border: 2px solid var(--border); border-radius: 14px; padding: 14px 8px;
-            text-align: center; cursor: pointer; transition: all 0.2s; user-select: none;
-        }
-        .mode-opt:active { transform: scale(0.97); }
-        .mode-ic {
-            width: 40px; height: 40px; border-radius: 10px; margin: 0 auto 8px;
-            display: flex; align-items: center; justify-content: center; font-size: 1rem;
-            transition: all 0.25s;
-        }
-        .mode-ic.ic-auto { background: #F3F4F6; color: #6B7280; }
-        .mode-ic.ic-open { background: #D1FAE5; color: #059669; }
-        .mode-ic.ic-close { background: #FEE2E2; color: #DC2626; }
-        .mode-opt h4 { font-size: 0.82rem; margin-bottom: 2px; font-weight: 600; }
-        .mode-opt span { font-size: 0.66rem; color: var(--text-sub); line-height: 1.2; display: block; }
-        .mode-opt.sel-auto { border-color: #6B7280; background: #F9FAFB; }
-        .mode-opt.sel-auto .ic-auto { background: #6B7280; color: white; }
-        .mode-opt.sel-open { border-color: var(--success); background: #ECFDF5; }
-        .mode-opt.sel-open .ic-open { background: var(--success); color: white; }
-        .mode-opt.sel-close { border-color: var(--danger); background: #FEF2F2; }
-        .mode-opt.sel-close .ic-close { background: var(--danger); color: white; }
-
-        /* === SCHEDULE EDITOR === */
-        .schedule-card {
-            background: #FFF; border-radius: 16px; overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 30px;
-            border: 1px solid var(--border);
-        }
-        .sched-header {
-            padding: 16px 20px; border-bottom: 1px solid #f3f4f6;
-            display: flex; align-items: center; gap: 10px;
-        }
-        .sched-header i { color: var(--secondary); }
-        .sched-header span { font-weight: 700; font-size: 0.95rem; }
-
-        .sched-row {
-            display: flex; align-items: center;
-            padding: 11px 20px; border-bottom: 1px solid #f9fafb;
-            gap: 8px; min-height: 50px; transition: background 0.15s;
-        }
-        .sched-row:last-child { border-bottom: none; }
-        .sched-row.is-today { background: #f0fdf4; }
-        .sched-row.is-closed-row { background: #fef9f9; }
-
-        .sched-day { width: 68px; flex-shrink: 0; font-size: 0.84rem; font-weight: 500; }
-        .sched-row.is-today .sched-day { color: var(--success); font-weight: 700; }
-        .today-badge {
-            display: none; font-size: 0.55rem; font-weight: 700; color: white;
-            background: var(--success); padding: 1px 5px; border-radius: 3px;
-            margin-left: 3px; vertical-align: middle;
-        }
-        .sched-row.is-today .today-badge { display: inline; }
-
-        .sched-times {
-            flex: 1; display: flex; align-items: center; gap: 6px; transition: opacity 0.25s;
-        }
-        .sched-times input[type="time"] {
-            flex: 1; padding: 6px 4px; border: 1.5px solid var(--border); border-radius: 8px;
-            font-family: 'Inter', sans-serif; font-size: 0.84rem;
-            text-align: center; transition: all 0.2s; background: white; min-width: 0;
-        }
-        .sched-times input[type="time"]:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(211,84,0,0.08); }
-        .sched-times input[type="time"]:disabled { background: #f3f4f6; color: #d1d5db; cursor: not-allowed; border-color: transparent; }
-        .time-dash { color: #d1d5db; font-weight: 500; flex-shrink: 0; }
-        .sched-times.tg-off { opacity: 0.3; pointer-events: none; }
-
-        .sched-closed-text {
-            flex: 1; text-align: center; font-size: 0.8rem; color: #d1d5db;
-            font-weight: 500; font-style: italic; display: none;
-        }
-        .sched-closed-text.show { display: block; }
-
-        .sched-sw { flex-shrink: 0; display: flex; align-items: center; gap: 6px; }
-        .switch { position: relative; display: inline-block; width: 42px; height: 23px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider {
-            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #d1d5db; transition: 0.3s; border-radius: 34px;
-        }
-        .slider:before {
-            position: absolute; content: ""; height: 17px; width: 17px;
-            left: 3px; bottom: 3px; background-color: white; transition: 0.3s;
-            border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-        }
-        input:checked + .slider { background-color: var(--success); }
-        input:checked + .slider:before { transform: translateX(19px); }
-        .sw-label { font-size: 0.66rem; font-weight: 600; width: 28px; text-align: right; color: #d1d5db; transition: color 0.2s; }
-        input:checked ~ .sw-label { color: var(--success); }
-
-        .sched-footer { padding: 14px 20px; border-top: 1px solid #f3f4f6; background: #fafafa; }
-        .btn-save-sched {
-            width: 100%; padding: 13px; background: var(--secondary);
-            color: white; border: none; border-radius: 10px;
-            font-weight: 600; cursor: pointer; font-size: 0.95rem;
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-            font-family: 'Inter', sans-serif; transition: 0.2s;
-        }
-        .btn-save-sched:hover { background: #1a252f; }
-        .btn-save-sched:active { transform: scale(0.98); }
-        .sched-hint { font-size: 0.72rem; color: #9ca3af; margin-top: 8px; text-align: center; }
-
-        /* === CONNECTION ERROR PANEL === */
-        .error-panel {
-            display: none; background: white; border-radius: 16px; padding: 30px 20px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 20px;
-            text-align: center; border: 2px solid var(--danger);
-        }
-        .error-panel.show { display: block; }
-        .error-panel .err-icon { font-size: 3rem; color: var(--danger); margin-bottom: 15px; }
-        .error-panel h3 { color: var(--danger); margin-bottom: 10px; }
-        .error-panel p { font-size: 0.88rem; color: #666; line-height: 1.6; margin-bottom: 15px; }
-        .error-panel .err-detail {
-            background: #f9fafb; border: 1px solid var(--border); border-radius: 8px;
-            padding: 12px; margin-bottom: 15px; font-size: 0.8rem; color: #999;
-            text-align: left; word-break: break-all; font-family: monospace;
-        }
-        .btn-retry {
-            padding: 12px 30px; background: var(--primary); color: white;
-            border: none; border-radius: 10px; font-weight: 600; cursor: pointer;
-            font-size: 0.95rem; font-family: 'Inter', sans-serif; transition: 0.2s;
-        }
-        .btn-retry:hover { background: var(--primary-dark); }
-        .btn-retry:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        /* === STOCK === */
-        .info-card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .info-card.blue { background: #F0F9FF; border: 1px solid #BAE6FD; }
-        .info-card.blue .section-title { color: #0369A1; }
-        .info-card.indigo { background: #EFF6FF; border: 1px solid #BFDBFE; }
-        .info-card.indigo .section-title { color: #1E40AF; }
-        .info-card p { font-size: 0.88rem; color: var(--text-main); line-height: 1.6; }
-
-        .stock-category-group { margin-bottom: 30px; }
-        .category-label { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-sub); margin-bottom: 10px; font-weight: 600; border-left: 4px solid var(--primary); padding-left: 10px; }
-        .stock-item { background: white; padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border: 1px solid transparent; transition: 0.2s; flex-wrap: wrap; gap: 10px; }
-        .stock-item:hover { border-color: var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-        .item-info { flex: 1; min-width: 0; }
-        .item-info h4 { font-size: 0.92rem; color: var(--text-main); font-weight: 500; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-        .stock-control-wrapper { display: flex; align-items: center; gap: 8px; background: #F9FAFB; padding: 5px; border-radius: 8px; }
-        .stock-input { width: 70px; padding: 8px; border: 1px solid var(--border); border-radius: 6px; text-align: center; font-weight: bold; color: var(--primary); -moz-appearance: textfield; font-family: 'Inter', sans-serif; }
-        .stock-input::-webkit-outer-spin-button, .stock-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        .stock-input:focus { border-color: var(--primary); outline: none; background: white; }
-        .unlimited-badge { font-size: 0.65rem; font-weight: 700; color: var(--success); background: #ECFDF5; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; }
-
-        .activity-card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 30px; }
-        .activity-item { padding: 10px 0; border-bottom: 1px solid #f3f4f6; font-size: 0.88rem; color: #555; }
-        .activity-item:last-child { border-bottom: none; }
-
-        #toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 30px; padding: 12px 20px; position: fixed; z-index: 10000; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 0.9rem; opacity: 0; transition: 0.3s; }
-        #toast.show { visibility: visible; opacity: 1; bottom: 40px; }
-
-        .order-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-        .btn-complete { background: var(--success); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600; font-family: 'Inter', sans-serif; }
-        .btn-complete:hover { background-color: #059669; }
-        .btn-export { background: var(--secondary); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; margin-bottom: 15px; display: flex; align-items: center; gap: 5px; font-family: 'Inter', sans-serif; }
-
-        #receiptModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: none; justify-content: center; align-items: center; }
-        .receipt-content { background: white; width: 300px; padding: 20px; font-family: 'Courier New', monospace; box-shadow: 0 10px 25px rgba(0,0,0,0.2); font-size: 0.85rem; }
-        .receipt-header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px; }
-        .receipt-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
-        .receipt-footer { margin-top: 15px; border-top: 1px dashed #000; padding-top: 10px; text-align: center; }
-
-        @media (max-width: 600px) {
-            .mode-options { grid-template-columns: 1fr; gap: 8px; }
-            .mode-opt { display: flex; align-items: center; gap: 12px; padding: 12px 14px; text-align: left; }
-            .mode-ic { margin: 0; width: 36px; height: 36px; font-size: 0.9rem; flex-shrink: 0; }
-            .nav-tab { padding: 12px 12px; font-size: 0.85rem; }
-            .stats-grid { grid-template-columns: 1fr 1fr; }
-            .sched-day { width: 56px; font-size: 0.78rem; }
-            .sw-label { display: none; }
+        :root{--primary:#D35400;--primary-dark:#A04000;--bg-body:#F3F4F6;--bg-card:#FFF;--text-main:#1F2937;--text-sub:#6B7280;--success:#10B981;--danger:#EF4444;--border:#E5E7EB;--secondary:#2C3E50;--warning:#F59E0B}
+        *{margin:0;padding:0;box-sizing:border-box;outline:none}
+        body{font-family:'Inter',sans-serif;background:var(--bg-body);color:var(--text-main);height:100vh;display:flex;flex-direction:column}
+        #loginScreen{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,var(--primary),#E67E22);z-index:9999;display:flex;align-items:center;justify-content:center;transition:opacity .5s}
+        .login-card{background:#fff;padding:40px;border-radius:20px;width:90%;max-width:400px;box-shadow:0 20px 25px -5px rgba(0,0,0,.1);text-align:center}
+        .login-logo{width:80px;height:80px;border-radius:50%;margin-bottom:20px;object-fit:cover;border:4px solid #FFF7ED}
+        .login-input{width:100%;padding:15px;margin:20px 0;border:2px solid var(--border);border-radius:12px;font-size:1rem;text-align:center;letter-spacing:2px;transition:.3s;font-family:'Inter',sans-serif}
+        .login-input:focus{border-color:var(--primary)}
+        .btn-login{width:100%;padding:15px;background:var(--primary);color:#fff;border:none;border-radius:12px;font-size:1rem;font-weight:600;cursor:pointer;transition:background .3s;font-family:'Inter',sans-serif}
+        .btn-login:hover{background:var(--primary-dark)}
+        .btn-login:active{transform:scale(.98)}
+        .btn-login:disabled{opacity:.6;cursor:not-allowed;transform:none}
+        .error-msg{color:var(--danger);font-size:.9rem;margin-top:10px;min-height:20px}
+        #dashboardScreen{display:none;height:100%;flex-direction:column}
+        .admin-header{background:#fff;padding:15px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+        .brand{display:flex;align-items:center;gap:10px}
+        .brand h2{font-size:1.2rem;color:var(--primary)}
+        .btn-logout{background:#FEE2E2;color:var(--danger);border:none;padding:8px 16px;border-radius:8px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:'Inter',sans-serif}
+        .btn-logout:hover{background:#FECACA}
+        .nav-tabs{background:#fff;display:flex;border-bottom:1px solid var(--border);padding:0 10px;overflow-x:auto;flex-shrink:0}
+        .nav-tabs::-webkit-scrollbar{display:none}
+        .nav-tab{padding:14px 18px;font-weight:500;color:var(--text-sub);border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap;transition:.3s;font-size:.92rem;user-select:none}
+        .nav-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+        .nav-tab i{margin-right:6px}
+        .admin-main{flex-grow:1;overflow-y:auto;padding:20px;max-width:800px;width:100%;margin:0 auto;position:relative}
+        .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px;margin-bottom:25px}
+        .stat-card{background:#fff;padding:20px;border-radius:16px;box-shadow:0 4px 6px -1px rgba(0,0,0,.05);text-align:center;border:1px solid var(--border)}
+        .stat-value{font-size:1.8rem;font-weight:700;color:var(--primary);margin-bottom:5px}
+        .stat-label{font-size:.8rem;color:var(--text-sub);font-weight:600;text-transform:uppercase}
+        .btn-reset-stats{width:100%;background:#FEF2F2;color:var(--danger);border:1px dashed #EF4444;padding:10px;border-radius:10px;font-size:.9rem;font-weight:600;cursor:pointer;margin-top:10px;margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:8px;font-family:'Inter',sans-serif}
+        .search-container{margin-bottom:20px;position:sticky;top:0;z-index:10;background:var(--bg-body);padding-bottom:5px}
+        .search-wrapper{display:flex;align-items:center;background:#fff;border:1px solid var(--border);border-radius:12px;padding:0 15px;box-shadow:0 2px 5px rgba(0,0,0,.05)}
+        .search-wrapper:focus-within{border-color:var(--primary);box-shadow:0 4px 12px rgba(211,84,0,.15)}
+        .search-wrapper i{color:#9CA3AF;margin-right:10px}
+        .search-wrapper input{border:none;width:100%;padding:14px 0;font-size:1rem;font-family:'Inter',sans-serif}
+        .section-title{font-size:1.1rem;font-weight:700;margin-bottom:15px;display:flex;align-items:center;gap:10px;color:var(--text-main)}
+        .live-card{border-radius:16px;padding:20px;margin-bottom:20px;border:2px solid var(--border);overflow:hidden;position:relative;transition:border-color .5s,background .5s}
+        .live-card.card-open{border-color:#6ee7b7;background:#f0fdf4}
+        .live-card.card-closed{border-color:#fca5a5;background:#fef2f2}
+        .live-card.card-waiting{border-color:#fcd34d;background:#fffbeb}
+        .live-card-top{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+        .live-icon-box{width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;transition:all .4s}
+        .live-icon-box.ic-open{background:#d1fae5;color:#059669}
+        .live-icon-box.ic-closed{background:#fee2e2;color:#dc2626}
+        .live-icon-box.ic-waiting{background:#fef3c7;color:#d97706}
+        .live-info{flex:1;min-width:0}
+        .live-label{font-size:.7rem;color:var(--text-sub);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+        .live-status{font-size:1.15rem;font-weight:800;margin-top:2px;transition:color .4s}
+        .live-status.s-open{color:#059669}
+        .live-status.s-closed{color:#dc2626}
+        .live-status.s-waiting{color:#d97706}
+        .live-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;transition:all .4s}
+        .live-dot.d-open{background:#10b981;animation:pulseDot 2s infinite}
+        .live-dot.d-closed{background:#ef4444}
+        .live-dot.d-waiting{background:#f59e0b;animation:pulseDotY 2s infinite}
+        @keyframes pulseDot{0%{box-shadow:0 0 0 0 rgba(16,185,129,.5)}70%{box-shadow:0 0 0 8px rgba(16,185,129,0)}100%{box-shadow:0 0 0 0 rgba(16,185,129,0)}}
+        @keyframes pulseDotY{0%{box-shadow:0 0 0 0 rgba(245,158,11,.4)}70%{box-shadow:0 0 0 8px rgba(245,158,11,0)}100%{box-shadow:0 0 0 0 rgba(245,158,11,0)}}
+        .live-detail{display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--text-sub);font-weight:500;background:rgba(255,255,255,.7);padding:8px 12px;border-radius:8px}
+        .live-detail i{color:var(--primary)}
+        .live-clock{margin-left:auto;font-size:.82rem;font-weight:700;color:var(--secondary);font-variant-numeric:tabular-nums}
+        .override-card{background:#fff;border-radius:16px;padding:20px;box-shadow:0 4px 6px -1px rgba(0,0,0,.05);margin-bottom:20px;border:1px solid var(--border)}
+        .override-desc{font-size:.85rem;color:#6b7280;line-height:1.6;margin-bottom:16px}
+        .mode-options{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+        .mode-opt{border:2px solid var(--border);border-radius:14px;padding:14px 8px;text-align:center;cursor:pointer;transition:all .2s;user-select:none}
+        .mode-opt:active{transform:scale(.97)}
+        .mode-ic{width:40px;height:40px;border-radius:10px;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:1rem;transition:all .25s}
+        .mode-ic.ic-auto{background:#F3F4F6;color:#6B7280}
+        .mode-ic.ic-open{background:#D1FAE5;color:#059669}
+        .mode-ic.ic-close{background:#FEE2E2;color:#DC2626}
+        .mode-opt h4{font-size:.82rem;margin-bottom:2px;font-weight:600}
+        .mode-opt span{font-size:.66rem;color:var(--text-sub);line-height:1.2;display:block}
+        .mode-opt.sel-auto{border-color:#6B7280;background:#F9FAFB}
+        .mode-opt.sel-auto .ic-auto{background:#6B7280;color:#fff}
+        .mode-opt.sel-open{border-color:var(--success);background:#ECFDF5}
+        .mode-opt.sel-open .ic-open{background:var(--success);color:#fff}
+        .mode-opt.sel-close{border-color:var(--danger);background:#FEF2F2}
+        .mode-opt.sel-close .ic-close{background:var(--danger);color:#fff}
+        .schedule-card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 6px -1px rgba(0,0,0,.05);margin-bottom:30px;border:1px solid var(--border)}
+        .sched-header{padding:16px 20px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;gap:10px}
+        .sched-header i{color:var(--secondary)}
+        .sched-header span{font-weight:700;font-size:.95rem}
+        .sched-row{display:flex;align-items:center;padding:11px 20px;border-bottom:1px solid #f9fafb;gap:8px;min-height:50px;transition:background .15s}
+        .sched-row:last-child{border-bottom:none}
+        .sched-row.is-today{background:#f0fdf4}
+        .sched-row.is-closed-row{background:#fef9f9}
+        .sched-day{width:68px;flex-shrink:0;font-size:.84rem;font-weight:500}
+        .sched-row.is-today .sched-day{color:var(--success);font-weight:700}
+        .today-badge{display:none;font-size:.55rem;font-weight:700;color:#fff;background:var(--success);padding:1px 5px;border-radius:3px;margin-left:3px;vertical-align:middle}
+        .sched-row.is-today .today-badge{display:inline}
+        .sched-times{flex:1;display:flex;align-items:center;gap:6px;transition:opacity .25s}
+        .sched-times input[type="time"]{flex:1;padding:6px 4px;border:1.5px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:.84rem;text-align:center;transition:all .2s;background:#fff;min-width:0}
+        .sched-times input[type="time"]:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(211,84,0,.08)}
+        .sched-times input[type="time"]:disabled{background:#f3f4f6;color:#d1d5db;cursor:not-allowed;border-color:transparent}
+        .time-dash{color:#d1d5db;font-weight:500;flex-shrink:0}
+        .sched-times.tg-off{opacity:.3;pointer-events:none}
+        .sched-closed-text{flex:1;text-align:center;font-size:.8rem;color:#d1d5db;font-weight:500;font-style:italic;display:none}
+        .sched-closed-text.show{display:block}
+        .sched-sw{flex-shrink:0;display:flex;align-items:center;gap:6px}
+        .sched-footer{padding:14px 20px;border-top:1px solid #f3f4f6;background:#fafafa}
+        .btn-save-sched{width:100%;padding:13px;background:var(--secondary);color:#fff;border:none;border-radius:10px;font-weight:600;cursor:pointer;font-size:.95rem;display:flex;align-items:center;justify-content:center;gap:8px;font-family:'Inter',sans-serif;transition:.2s}
+        .btn-save-sched:hover{background:#1a252f}
+        .btn-save-sched:active{transform:scale(.98)}
+        .sched-hint{font-size:.72rem;color:#9ca3af;margin-top:8px;text-align:center}
+        .switch{position:relative;display:inline-block;width:46px;height:26px;flex-shrink:0}
+        .switch input{opacity:0;width:0;height:0}
+        .slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:#d1d5db;transition:.3s;border-radius:34px}
+        .slider:before{position:absolute;content:"";height:20px;width:20px;left:3px;bottom:3px;background-color:#fff;transition:.3s;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+        input:checked+.slider{background-color:var(--success)}
+        input:checked+.slider:before{transform:translateX(20px)}
+        input:disabled+.slider{opacity:.35;cursor:not-allowed}
+        .sw-label{font-size:.66rem;font-weight:600;width:28px;text-align:right;color:#d1d5db;transition:color .2s}
+        input:checked~.sw-label{color:var(--success)}
+        .cat-switch-card{background:#fff;border-radius:16px;padding:20px;box-shadow:0 4px 6px -1px rgba(0,0,0,.05);margin-bottom:20px;border:2px solid var(--border)}
+        .cat-switch-desc{font-size:.82rem;color:#6b7280;margin-bottom:16px;line-height:1.5}
+        .cat-switch-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+        .cat-switch-item{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-radius:12px;border:2px solid var(--border);transition:all .3s;background:#f9fafb}
+        .cat-switch-item.is-off{border-color:#fca5a5;background:#fef2f2}
+        .cat-switch-item.is-on{border-color:#6ee7b7;background:#f0fdf4}
+        .cat-switch-left{display:flex;align-items:center;gap:10px}
+        .cat-switch-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;transition:all .3s}
+        .cat-switch-item.is-on .cat-switch-icon{background:#d1fae5;color:#059669}
+        .cat-switch-item.is-off .cat-switch-icon{background:#fee2e2;color:#dc2626}
+        .cat-switch-name{font-weight:600;font-size:.88rem}
+        .cat-switch-sub{font-size:.7rem;color:var(--text-sub)}
+        .info-card{background:#fff;border-radius:16px;padding:20px;box-shadow:0 4px 6px -1px rgba(0,0,0,.05);margin-bottom:20px}
+        .info-card.blue{background:#F0F9FF;border:1px solid #BAE6FD}
+        .info-card.blue .section-title{color:#0369A1}
+        .info-card.indigo{background:#EFF6FF;border:1px solid #BFDBFE}
+        .info-card.indigo .section-title{color:#1E40AF}
+        .info-card p{font-size:.88rem;color:var(--text-main);line-height:1.6}
+        .stock-category-group{margin-bottom:30px}
+        .category-label{font-size:.85rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-sub);margin-bottom:10px;font-weight:600;border-left:4px solid var(--primary);padding-left:10px}
+        .stock-item{background:#fff;padding:14px 16px;border-radius:12px;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;border:1px solid transparent;transition:.2s;gap:12px}
+        .stock-item:hover{border-color:var(--border);box-shadow:0 4px 6px -1px rgba(0,0,0,.05)}
+        .stock-item.is-off{background:#fef2f2;border-color:#fecaca}
+        .stock-item.is-disabled{opacity:.5;pointer-events:none}
+        .item-info{flex:1;min-width:0}
+        .item-info h4{font-size:.9rem;color:var(--text-main);font-weight:500;line-height:1.3;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+        .off-tag{display:inline-block;font-size:.65rem;font-weight:700;color:var(--danger);background:#fee2e2;padding:2px 6px;border-radius:4px;margin-top:4px;text-transform:uppercase}
+        .disabled-tag{display:inline-block;font-size:.65rem;font-weight:700;color:var(--text-sub);background:#f3f4f6;padding:2px 6px;border-radius:4px;margin-top:4px;text-transform:uppercase}
+        .activity-card{background:#fff;border-radius:16px;padding:20px;box-shadow:0 4px 6px -1px rgba(0,0,0,.05);margin-bottom:30px}
+        .activity-item{padding:10px 0;border-bottom:1px solid #f3f4f6;font-size:.88rem;color:#555}
+        .activity-item:last-child{border-bottom:none}
+        .order-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:15px;margin-bottom:15px;box-shadow:0 2px 4px rgba(0,0,0,.02)}
+        .btn-export{background:var(--secondary);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:.85rem;cursor:pointer;margin-bottom:15px;display:flex;align-items:center;gap:5px;font-family:'Inter',sans-serif}
+        .error-panel{display:none;background:#fff;border-radius:16px;padding:30px 20px;box-shadow:0 4px 6px -1px rgba(0,0,0,.05);margin-bottom:20px;text-align:center;border:2px solid var(--danger);position:relative;z-index:100}
+        .error-panel.show{display:block}
+        .error-panel .err-icon{font-size:3rem;color:var(--danger);margin-bottom:15px}
+        .error-panel h3{color:var(--danger);margin-bottom:10px}
+        .error-panel p{font-size:.88rem;color:#666;line-height:1.6;margin-bottom:15px}
+        .error-panel .err-detail{background:#f9fafb;border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:15px;font-size:.8rem;color:#999;text-align:left;word-break:break-all;font-family:monospace;white-space:pre-wrap;max-height:200px;overflow-y:auto}
+        .btn-retry{padding:12px 30px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-weight:600;cursor:pointer;font-size:.95rem;font-family:'Inter',sans-serif;transition:.2s}
+        .btn-retry:hover{background:var(--primary-dark)}
+        .btn-retry:disabled{opacity:.5;cursor:not-allowed}
+        .btn-retry .spinner-icon{display:none}
+        .btn-retry.loading .spinner-icon{display:inline-block;margin-right:8px;animation:spin 1s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .loading-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.95);z-index:9000;display:none;justify-content:center;align-items:center;flex-direction:column;gap:20px}
+        .loading-overlay.show{display:flex}
+        .loading-spinner{width:50px;height:50px;border:4px solid #eee;border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite}
+        .loading-text{font-size:1rem;font-weight:600;color:var(--secondary)}
+        .loading-sub{font-size:.85rem;color:#999}
+        #receiptModal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:10000;display:none;justify-content:center;align-items:center}
+        .receipt-content{background:#fff;width:300px;padding:20px;font-family:'Courier New',monospace;box-shadow:0 10px 25px rgba(0,0,0,.2);font-size:.85rem;max-height:90vh;overflow-y:auto}
+        .receipt-header{text-align:center;border-bottom:1px dashed #000;padding-bottom:10px;margin-bottom:10px}
+        .receipt-row{display:flex;justify-content:space-between;margin-bottom:5px}
+        .receipt-footer{margin-top:15px;border-top:1px dashed #000;padding-top:10px;text-align:center}
+        #toast{visibility:hidden;min-width:250px;background-color:#333;color:#fff;text-align:center;border-radius:30px;padding:12px 20px;position:fixed;z-index:10000;left:50%;bottom:30px;transform:translateX(-50%);font-size:.9rem;opacity:0;transition:.3s}
+        #toast.show{visibility:visible;opacity:1;bottom:40px}
+        @media(max-width:600px){
+            .mode-options{grid-template-columns:1fr;gap:8px}
+            .mode-opt{display:flex;align-items:center;gap:12px;padding:12px 14px;text-align:left}
+            .mode-ic{margin:0;width:36px;height:36px;font-size:.9rem;flex-shrink:0}
+            .nav-tab{padding:12px 12px;font-size:.85rem}
+            .stats-grid{grid-template-columns:1fr 1fr}
+            .sched-day{width:56px;font-size:.78rem}
+            .sw-label{display:none}
+            .cat-switch-grid{grid-template-columns:1fr}
         }
     </style>
 </head>
 <body>
 
-    <!-- LOGIN -->
-    <div id="loginScreen">
-        <div class="login-card">
-            <img src="https://z-cdn-media.chatglm.cn/files/50ca2c37-9a98-4c90-923b-ae99959846b9.png?auth_key=1876671393-5447ef07c70045b48cce9108e1c0bf25-0-4f77a9446e7fe2d91efdbbfa00385980" alt="Logo" class="login-logo">
-            <h2 style="margin-bottom:5px;color:var(--secondary);">Admin Panel</h2>
-            <p style="color:#888;font-size:0.9rem;">Bubur Grace Management</p>
-            <input type="password" id="adminPassword" class="login-input" placeholder="Password Admin" autocomplete="off">
-            <div class="error-msg" id="loginError">&nbsp;</div>
-            <button class="btn-login" id="btnLogin">MASUK DASHBOARD</button>
+<div id="loginScreen">
+    <div class="login-card">
+        <img src="https://z-cdn-media.chatglm.cn/files/50ca2c37-9a98-4c90-923b-ae99959846b9.png?auth_key=1876671393-5447ef07c70045b48cce9108e1c0bf25-0-4f77a9446e7fe2d91efdbbfa00385980" alt="Logo" class="login-logo">
+        <h2 style="margin-bottom:5px;color:var(--secondary);">Admin Panel</h2>
+        <p style="color:#888;font-size:.9rem;">Bubur Grace Management</p>
+        <input type="password" id="adminPassword" class="login-input" placeholder="Password Admin" autocomplete="off">
+        <div class="error-msg" id="loginError">&nbsp;</div>
+        <button class="btn-login" id="btnLogin">MASUK DASHBOARD</button>
+    </div>
+</div>
+
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Menghubungkan ke Firebase...</div>
+    <div class="loading-sub">Mohon tunggu sebentar</div>
+</div>
+
+<div id="dashboardScreen">
+    <header class="admin-header">
+        <div class="brand">
+            <i class="fa-solid fa-gauge-high" style="color:var(--primary);font-size:1.4rem;"></i>
+            <div><h2>Admin Bubur GRace</h2><span style="font-size:.78rem;color:#888;">Online Control Panel</span></div>
         </div>
-    </div>
+        <button class="btn-logout" id="btnLogout"><i class="fa-solid fa-arrow-right-from-bracket"></i> Keluar</button>
+    </header>
 
-    <!-- DASHBOARD -->
-    <div id="dashboardScreen">
-        <header class="admin-header">
-            <div class="brand">
-                <i class="fa-solid fa-gauge-high" style="color:var(--primary);font-size:1.4rem;"></i>
-                <div><h2>Admin Bubur GRace</h2><span style="font-size:0.78rem;color:#888;">Online Control Panel</span></div>
-            </div>
-            <button class="btn-logout" id="btnLogout"><i class="fa-solid fa-arrow-right-from-bracket"></i> Keluar</button>
-        </header>
+    <nav class="nav-tabs" id="navTabs">
+        <div class="nav-tab active" data-tab="dashboard"><i class="fa-solid fa-chart-line"></i> Dashboard</div>
+        <div class="nav-tab" data-tab="status"><i class="fa-regular fa-clock"></i> Jam Operasional</div>
+        <div class="nav-tab" data-tab="daily"><i class="fa-solid fa-box-open"></i> Stok Harian</div>
+        <div class="nav-tab" data-tab="weekend"><i class="fa-solid fa-umbrella-beach"></i> Stok Weekend</div>
+        <div class="nav-tab" data-tab="history"><i class="fa-solid fa-clock-rotate-left"></i> Riwayat</div>
+    </nav>
 
-        <nav class="nav-tabs" id="navTabs">
-            <div class="nav-tab active" data-tab="dashboard"><i class="fa-solid fa-chart-line"></i> Dashboard</div>
-            <div class="nav-tab" data-tab="status"><i class="fa-regular fa-clock"></i> Jam Operasional</div>
-            <div class="nav-tab" data-tab="daily"><i class="fa-solid fa-box-open"></i> Stok Harian</div>
-            <div class="nav-tab" data-tab="weekend"><i class="fa-solid fa-umbrella-beach"></i> Stok Weekend</div>
-            <div class="nav-tab" data-tab="history"><i class="fa-solid fa-clock-rotate-left"></i> Riwayat</div>
-        </nav>
+    <main class="admin-main" id="mainContent">
 
-        <main class="admin-main" id="mainContent">
-
-            <!-- ERROR PANEL (muncul jika Firebase gagal) -->
-            <div class="error-panel" id="errorPanel">
-                <div class="err-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
-                <h3>Gagal Terhubung ke Firebase</h3>
-                <p>Dashboard tidak bisa memuat data. Kemungkinan penyebab:</p>
-                <div class="err-detail" id="errorDetail">Memeriksa...</div>
-                <p style="font-size:0.82rem;color:#888;">
-                    <strong>Solusi:</strong><br>
-                    1. Pastikan ada koneksi internet<br>
-                    2. Coba buka file ini langsung di browser (bukan via Live Server)<br>
-                    3. Jika pakai Live Server, buka via <code>http://127.0.0.1:5500</code> bukan <code>file://</code><br>
-                    4. Coba reload halaman
-                </p>
-                <button class="btn-retry" id="btnRetry"><i class="fa-solid fa-rotate-right"></i> Coba Lagi</button>
-            </div>
-
-            <!-- TAB: DASHBOARD -->
-            <div id="tab-dashboard" class="tab-content">
-                <div class="stats-grid">
-                    <div class="stat-card"><div class="stat-value" id="statOmset">Rp 0</div><div class="stat-label">Omset Hari Ini</div></div>
-                    <div class="stat-card"><div class="stat-value" id="statOrders">0</div><div class="stat-label">Jumlah Order</div></div>
-                    <div class="stat-card"><div class="stat-value" id="statTop" style="font-size:1.1rem;line-height:2rem;">-</div><div class="stat-label">Menu Terlaris</div></div>
-                </div>
-                <button class="btn-reset-stats" id="btnResetStats"><i class="fa-solid fa-rotate-right"></i> Reset Omset & Bersihkan List</button>
-                <div class="activity-card">
-                    <div class="section-title"><i class="fa-solid fa-bell" style="color:var(--primary);"></i> Aktivitas Terkini</div>
-                    <div id="recentActivityList">Memuat data...</div>
-                </div>
-            </div>
-
-            <!-- TAB: JAM OPERASIONAL -->
-            <div id="tab-status" class="tab-content" style="display:none;">
-                <div class="live-card" id="liveCard">
-                    <div class="live-card-top">
-                        <div class="live-icon-box ic-closed" id="liveIcon"><i class="fa-solid fa-store-slash"></i></div>
-                        <div class="live-info">
-                            <div class="live-label">Status Toko (Real-Time)</div>
-                            <div class="live-status s-closed" id="liveStatusText">Memuat...</div>
-                        </div>
-                        <div class="live-dot d-closed" id="liveDot"></div>
-                    </div>
-                    <div class="live-detail" id="liveDetail">
-                        <i class="fa-solid fa-circle-info"></i>
-                        <span id="liveDetailText">Mengambil data jadwal...</span>
-                        <span class="live-clock" id="liveClock">--:--:--</span>
-                    </div>
-                </div>
-
-                <div class="override-card">
-                    <div class="section-title"><i class="fa-solid fa-sliders" style="color:var(--primary);"></i> Override Darurat</div>
-                    <p class="override-desc">
-                        <strong>Otomatis</strong> = status 100% mengikuti jam operasional.<br>
-                        <strong>Paksa Buka/Tutup</strong> = hanya darurat, menimpa jadwal sementara.
-                    </p>
-                    <div class="mode-options">
-                        <div class="mode-opt" id="opt-auto" data-mode="auto"><div class="mode-ic ic-auto"><i class="fa-solid fa-robot"></i></div><div><h4>Otomatis</h4><span>Ikuti Jadwal</span></div></div>
-                        <div class="mode-opt" id="opt-open" data-mode="open"><div class="mode-ic ic-open"><i class="fa-solid fa-store"></i></div><div><h4>Paksa Buka</h4><span>Darurat</span></div></div>
-                        <div class="mode-opt" id="opt-close" data-mode="close"><div class="mode-ic ic-close"><i class="fa-solid fa-store-slash"></i></div><div><h4>Paksa Tutup</h4><span>Darurat</span></div></div>
-                    </div>
-                </div>
-
-                <div class="schedule-card">
-                    <div class="sched-header"><i class="fa-regular fa-clock"></i><span>Setting Jam Operasional Per Hari</span></div>
-                    <div id="schedContainer"></div>
-                    <div class="sched-footer">
-                        <button class="btn-save-sched" id="btnSaveSched"><i class="fa-solid fa-floppy-disk"></i> Simpan Jadwal</button>
-                        <div class="sched-hint"><i class="fa-solid fa-circle-info"></i> Matikan toggle = toko tutup di hari itu. Jam yang kamu set menentukan status buka/tutup secara real-time.</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TAB: STOK HARIAN -->
-            <div id="tab-daily" class="tab-content" style="display:none;">
-                <div class="info-card blue"><div class="section-title"><i class="fa-solid fa-boxes-stacked"></i> Atur Stok Harian</div><p><strong>Ketik Angka:</strong> Membatasi stok. <strong>Kosongkan:</strong> Unlimited.<br><em>Menu Nasi Uduk ada di tab Weekend.</em></p></div>
-                <div class="search-container"><div class="search-wrapper"><i class="fa-solid fa-search"></i><input type="text" id="dailySearch" placeholder="Cari nama menu..."></div></div>
-                <div id="dailyStockList"></div>
-            </div>
-
-            <!-- TAB: STOK WEEKEND -->
-            <div id="tab-weekend" class="tab-content" style="display:none;">
-                <div class="info-card indigo"><div class="section-title"><i class="fa-solid fa-sun"></i> Stok Weekend</div><p>Khusus menu Nasi Uduk yang hanya jual saat Weekend atau mode Paksa Buka.</p></div>
-                <div class="search-container"><div class="search-wrapper"><i class="fa-solid fa-search"></i><input type="text" id="weekendSearch" placeholder="Cari nama menu..."></div></div>
-                <div id="weekendStockList"></div>
-            </div>
-
-            <!-- TAB: RIWAYAT -->
-            <div id="tab-history" class="tab-content" style="display:none;">
-                <div class="section-title"><i class="fa-solid fa-clock-rotate-left" style="color:var(--primary);"></i> Riwayat Pesanan</div>
-                <button class="btn-export" id="btnExport"><i class="fa-solid fa-file-csv"></i> Download Laporan (CSV)</button>
-                <div id="ordersList"><div style="text-align:center;padding:30px;color:#999;">Memuat data...</div></div>
-            </div>
-        </main>
-    </div>
-
-    <!-- RECEIPT MODAL -->
-    <div id="receiptModal">
-        <div class="receipt-content" id="receiptInner">
-            <div class="receipt-header"><h3>BUBUR GRACE</h3><p>Citra Rasa Istimewa</p></div>
-            <div id="receiptBody"></div>
-            <div class="receipt-footer"><p>Terima Kasih!</p><button id="btnCloseReceipt" style="margin-top:10px;padding:5px 15px;border:1px solid #ccc;border-radius:6px;cursor:pointer;background:white;">Tutup</button></div>
+        <div class="error-panel" id="errorPanel">
+            <div class="err-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <h3>Gagal Terhubung ke Firebase</h3>
+            <p>Dashboard tidak bisa memuat data.</p>
+            <div class="err-detail" id="errorDetail">Memeriksa...</div>
+            <button class="btn-retry" id="btnRetry"><span class="spinner-icon"><i class="fa-solid fa-spinner fa-spin"></i></span><i class="fa-solid fa-rotate-right"></i> Coba Lagi</button>
         </div>
+
+        <!-- Tab: Dashboard -->
+        <div id="tab-dashboard" class="tab-content">
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-value" id="statOmset">Rp 0</div><div class="stat-label">Omset Hari Ini</div></div>
+                <div class="stat-card"><div class="stat-value" id="statOrders">0</div><div class="stat-label">Jumlah Order</div></div>
+                <div class="stat-card"><div class="stat-value" id="statTop" style="font-size:1.1rem;line-height:2rem;">-</div><div class="stat-label">Menu Terlaris</div></div>
+            </div>
+            <button class="btn-reset-stats" id="btnResetStats"><i class="fa-solid fa-rotate-right"></i> Reset Omset & Bersihkan List</button>
+            <div class="activity-card">
+                <div class="section-title"><i class="fa-solid fa-bell" style="color:var(--primary);"></i> Aktivitas Terkini</div>
+                <div id="recentActivityList">Memuat data...</div>
+            </div>
+        </div>
+
+        <!-- Tab: Status -->
+        <div id="tab-status" class="tab-content" style="display:none;">
+            <div class="live-card" id="liveCard">
+                <div class="live-card-top">
+                    <div class="live-icon-box ic-closed" id="liveIcon"><i class="fa-solid fa-store-slash"></i></div>
+                    <div class="live-info">
+                        <div class="live-label">Status Toko (Real-Time)</div>
+                        <div class="live-status s-closed" id="liveStatusText">Memuat...</div>
+                    </div>
+                    <div class="live-dot d-closed" id="liveDot"></div>
+                </div>
+                <div class="live-detail">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span id="liveDetailText">Mengambil data jadwal...</span>
+                    <span class="live-clock" id="liveClock">--:--:--</span>
+                </div>
+            </div>
+            <div class="override-card">
+                <div class="section-title"><i class="fa-solid fa-sliders" style="color:var(--primary);"></i> Override Darurat</div>
+                <p class="override-desc"><strong>Otomatis</strong> = status mengikuti jam operasional.<br><strong>Paksa Buka/Tutup</strong> = darurat, menimpa jadwal.</p>
+                <div class="mode-options">
+                    <div class="mode-opt" data-mode="auto"><div class="mode-ic ic-auto"><i class="fa-solid fa-robot"></i></div><div><h4>Otomatis</h4><span>Ikuti Jadwal</span></div></div>
+                    <div class="mode-opt" data-mode="open"><div class="mode-ic ic-open"><i class="fa-solid fa-store"></i></div><div><h4>Paksa Buka</h4><span>Darurat</span></div></div>
+                    <div class="mode-opt" data-mode="close"><div class="mode-ic ic-close"><i class="fa-solid fa-store-slash"></i></div><div><h4>Paksa Tutup</h4><span>Darurat</span></div></div>
+                </div>
+            </div>
+            <div class="schedule-card">
+                <div class="sched-header"><i class="fa-regular fa-clock"></i><span>Setting Jam Operasional Per Hari</span></div>
+                <div id="schedContainer"></div>
+                <div class="sched-footer">
+                    <button class="btn-save-sched" id="btnSaveSched"><i class="fa-solid fa-floppy-disk"></i> Simpan Jadwal</button>
+                    <div class="sched-hint"><i class="fa-solid fa-circle-info"></i> Matikan toggle = toko tutup di hari itu.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Daily Stock -->
+        <div id="tab-daily" class="tab-content" style="display:none;">
+            <div class="cat-switch-card" id="dailyCatSwitchCard">
+                <div class="section-title"><i class="fa-solid fa-layer-group" style="color:var(--primary);"></i> Switch Kategori</div>
+                <p class="cat-switch-desc">Matikan switch kategori = semua menu di kategori itu langsung tutup. Switch individual di bawah akan otomatis ter-lock.</p>
+                <div class="cat-switch-grid" id="dailyCatSwitchGrid"></div>
+            </div>
+            <div class="info-card blue">
+                <div class="section-title"><i class="fa-solid fa-boxes-stacked"></i> Stok Per Item</div>
+                <p><strong>ON</strong> = menu tersedia. <strong>OFF</strong> = menu habis. Jika kategori di atas OFF, switch di bawah akan terkunci.</p>
+            </div>
+            <div class="search-container"><div class="search-wrapper"><i class="fa-solid fa-search"></i><input type="text" id="dailySearch" placeholder="Cari nama menu..."></div></div>
+            <div id="dailyStockList"></div>
+        </div>
+
+        <!-- Tab: Weekend Stock -->
+        <div id="tab-weekend" class="tab-content" style="display:none;">
+            <div class="cat-switch-card" id="weekendCatSwitchCard">
+                <div class="section-title"><i class="fa-solid fa-layer-group" style="color:var(--primary);"></i> Switch Kategori</div>
+                <p class="cat-switch-desc">Matikan switch = semua Nasi Uduk langsung tutup.</p>
+                <div class="cat-switch-grid" id="weekendCatSwitchGrid"></div>
+            </div>
+            <div class="info-card indigo">
+                <div class="section-title"><i class="fa-solid fa-sun"></i> Stok Weekend</div>
+                <p>Khusus menu Nasi Uduk. Switch ON = tersedia, OFF = habis.</p>
+            </div>
+            <div class="search-container"><div class="search-wrapper"><i class="fa-solid fa-search"></i><input type="text" id="weekendSearch" placeholder="Cari nama menu..."></div></div>
+            <div id="weekendStockList"></div>
+        </div>
+
+        <!-- Tab: History -->
+        <div id="tab-history" class="tab-content" style="display:none;">
+            <div class="section-title"><i class="fa-solid fa-clock-rotate-left" style="color:var(--primary);"></i> Riwayat Pesanan</div>
+            <button class="btn-export" id="btnExport"><i class="fa-solid fa-file-csv"></i> Download Laporan (CSV)</button>
+            <div id="ordersList"><div style="text-align:center;padding:30px;color:#999;">Memuat data...</div></div>
+        </div>
+
+    </main>
+</div>
+
+<div id="receiptModal">
+    <div class="receipt-content" id="receiptInner">
+        <div class="receipt-header"><h3>BUBUR GRACE</h3><p>Citra Rasa Istimewa</p></div>
+        <div id="receiptBody"></div>
+        <div class="receipt-footer"><p>Terima Kasih!</p><button id="btnCloseReceipt" style="margin-top:10px;padding:5px 15px;border:1px solid #ccc;border-radius:6px;cursor:pointer;background:#fff;">Tutup</button></div>
     </div>
+</div>
 
-    <div id="toast">Berhasil</div>
+<div id="toast">Berhasil</div>
 
-    <script>
-        /* ==============================================
-           DATA MENU
-        ============================================== */
-        var menuItems = [
-            {name:"Paket A (Bubur Biasa + Minuman)",category:"Paket",isWeekend:false},
-            {name:"Paket B (Bubur Telur + Pangsit Goreng)",category:"Paket",isWeekend:false},
-            {name:"Paket C (Mie Kecil Komplit + Pangsit Goreng)",category:"Paket",isWeekend:false},
-            {name:"Paket D (Mie Lebar Komplit + Pangsit Goreng)",category:"Paket",isWeekend:false},
-            {name:"Paket E (Kwetiau Komplit + Pangsit Goreng)",category:"Paket",isWeekend:false},
-            {name:"Paket F (Bihun Komplit + Pangsit Goreng)",category:"Paket",isWeekend:false},
-            {name:"Bubur Ayam Biasa",category:"Bubur",isWeekend:false},
-            {name:"Bubur + Telur Ayam Kampung",category:"Bubur",isWeekend:false},
-            {name:"Bubur Polos / Putih",category:"Bubur",isWeekend:false},
-            {name:"Extra Merah Telur Ayam Kampung",category:"Topping",isWeekend:false},
-            {name:"Extra Ayam Rebus",category:"Topping",isWeekend:false},
-            {name:"Extra Cakwe Iris",category:"Topping",isWeekend:false},
-            {name:"Mie Ayam Biasa",category:"Mie",isWeekend:false},
-            {name:"Mie Ayam Baso",category:"Mie",isWeekend:false},
-            {name:"Mie Ayam Pangsit Rebus",category:"Mie",isWeekend:false},
-            {name:"Mie Ayam Komplit",category:"Mie",isWeekend:false},
-            {name:"Mie Yamin Biasa",category:"Mie",isWeekend:false},
-            {name:"Mie Yamin Baso",category:"Mie",isWeekend:false},
-            {name:"Mie Yamin Pangsit Rebus",category:"Mie",isWeekend:false},
-            {name:"Mie Yamin Komplit",category:"Mie",isWeekend:false},
-            {name:"Kwetiau Ayam Biasa",category:"Kwetiau",isWeekend:false},
-            {name:"Kwetiau Baso",category:"Kwetiau",isWeekend:false},
-            {name:"Kwetiau Pangsit Rebus",category:"Kwetiau",isWeekend:false},
-            {name:"Kwetiau Komplit",category:"Kwetiau",isWeekend:false},
-            {name:"Bihun Ayam Biasa",category:"Bihun",isWeekend:false},
-            {name:"Bihun Baso",category:"Bihun",isWeekend:false},
-            {name:"Bihun Pangsit Rebus",category:"Bihun",isWeekend:false},
-            {name:"Bihun Komplit",category:"Bihun",isWeekend:false},
-            {name:"Pangsit Rebus Ayam (5 Pcs)",category:"Baso",isWeekend:false},
-            {name:"Baso Sapi (5 Pcs)",category:"Baso",isWeekend:false},
-            {name:"Baso Ayam Sawi (5 Pcs)",category:"Baso",isWeekend:false},
-            {name:"Baso Ayam Sawi & Sapi (5 Pcs)",category:"Baso",isWeekend:false},
-            {name:"Baso Ayam Sawi & Pangsit Rebus (5 Pcs)",category:"Baso",isWeekend:false},
-            {name:"Nasi Uduk + Ayam Goreng",category:"Nasi Uduk",isWeekend:true},
-            {name:"Ayam Goreng",category:"Nasi Uduk",isWeekend:true},
-            {name:"Nasi Uduk Polos",category:"Nasi Uduk",isWeekend:true},
-            {name:"Nasi Uduk + Telur Dadar",category:"Nasi Uduk",isWeekend:true},
-            {name:"Nasi Uduk + Telur Ceplok Balado",category:"Nasi Uduk",isWeekend:true},
-            {name:"Sate Ayam Manis (3 Pcs)",category:"Sate",isWeekend:false},
-            {name:"Sate Ayam Manis (5 Pcs)",category:"Sate",isWeekend:false},
-            {name:"Sate Ayam Manis (10 Pcs)",category:"Sate",isWeekend:false},
-            {name:"Bubur Kacang Ijo",category:"Bubur Manis",isWeekend:false},
-            {name:"Bubur Ketan Item",category:"Bubur Manis",isWeekend:false},
-            {name:"Bubur Mix",category:"Bubur Manis",isWeekend:false},
-            {name:"Kacang Ijo Crispy",category:"Bubur Manis",isWeekend:false},
-            {name:"Ketan Item Crispy",category:"Bubur Manis",isWeekend:false},
-            {name:"Mix Crispy",category:"Bubur Manis",isWeekend:false},
-            {name:"Dimsum Ayam Isi 3",category:"Dimsum",isWeekend:false},
-            {name:"Dimsum Ayam Isi 5",category:"Dimsum",isWeekend:false},
-            {name:"Dimsum Ayam Isi 10",category:"Dimsum",isWeekend:false},
-            {name:"Dimsum Ayam Frozen Isi 15",category:"Dimsum",isWeekend:false},
-            {name:"Cakwe Goreng",category:"Gorengan",isWeekend:false},
-            {name:"Pangsit Goreng Isi Ayam (5 Pcs)",category:"Gorengan",isWeekend:false},
-            {name:"Kulit Pangsit (3 Pcs)",category:"Gorengan",isWeekend:false},
-            {name:"Kulit Pangsit Basah (10 Pcs)",category:"Gorengan",isWeekend:false},
-            {name:"Sate Ati",category:"Jajanan",isWeekend:false},
-            {name:"Sate Ampela",category:"Jajanan",isWeekend:false},
-            {name:"Sate Usus",category:"Jajanan",isWeekend:false},
-            {name:"Sate Telur Puyuh",category:"Jajanan",isWeekend:false},
-            {name:"Sate Jantung",category:"Jajanan",isWeekend:false},
-            {name:"Sate Jendil",category:"Jajanan",isWeekend:false},
-            {name:"Kopi O",category:"Minuman",isWeekend:false},
-            {name:"Kopi O + Gula",category:"Minuman",isWeekend:false},
-            {name:"Kopi O + Susu",category:"Minuman",isWeekend:false},
-            {name:"Kopi O + 2 Egg",category:"Minuman",isWeekend:false},
-            {name:"Kopi O + 4 Egg",category:"Minuman",isWeekend:false},
-            {name:"Telur Rebus",category:"Minuman",isWeekend:false},
-            {name:"Sari Kacang Ijo",category:"Minuman",isWeekend:false},
-            {name:"Susu Kacang Kedelai",category:"Minuman",isWeekend:false},
-            {name:"Thai Tea",category:"Minuman",isWeekend:false},
-            {name:"Koffie Susu GRace",category:"Minuman",isWeekend:false},
-            {name:"Koffie Latte GRace",category:"Minuman",isWeekend:false},
-            {name:"Jeruk Murni",category:"Minuman",isWeekend:false},
-            {name:"Es Teh Tawar",category:"Minuman",isWeekend:false},
-            {name:"Es Teh Manis",category:"Minuman",isWeekend:false},
-            {name:"Teh Tawar Panas",category:"Minuman",isWeekend:false},
-            {name:"Teh Manis Panas",category:"Minuman",isWeekend:false},
-            {name:"Aqua Botol",category:"Minuman",isWeekend:false},
-            {name:"S-tee",category:"Minuman",isWeekend:false},
-            {name:"Extra Es Batu",category:"Minuman",isWeekend:false}
-        ];
+<script>
+/* ============================================
+   MENU DATA
+============================================ */
+var menuItems = [
+    {name:"Paket A (Bubur Biasa + Minuman)",category:"Paket",isWeekend:false},
+    {name:"Paket B (Bubur Telur + Pangsit Goreng)",category:"Paket",isWeekend:false},
+    {name:"Paket C (Mie Kecil Komplit + Pangsit Goreng)",category:"Paket",isWeekend:false},
+    {name:"Paket D (Mie Lebar Komplit + Pangsit Goreng)",category:"Paket",isWeekend:false},
+    {name:"Paket E (Kwetiau Komplit + Pangsit Goreng)",category:"Paket",isWeekend:false},
+    {name:"Paket F (Bihun Komplit + Pangsit Goreng)",category:"Paket",isWeekend:false},
+    {name:"Bubur Ayam Biasa",category:"Bubur",isWeekend:false},
+    {name:"Bubur + Telur Ayam Kampung",category:"Bubur",isWeekend:false},
+    {name:"Bubur Polos / Putih",category:"Bubur",isWeekend:false},
+    {name:"Extra Merah Telur Ayam Kampung",category:"Topping",isWeekend:false},
+    {name:"Extra Ayam Rebus",category:"Topping",isWeekend:false},
+    {name:"Extra Cakwe Iris",category:"Topping",isWeekend:false},
+    {name:"Mie Ayam Biasa (Kecil)",category:"Mie",isWeekend:false},
+    {name:"Mie Ayam Baso (Kecil)",category:"Mie",isWeekend:false},
+    {name:"Mie Ayam Pangsit Rebus (Kecil)",category:"Mie",isWeekend:false},
+    {name:"Mie Ayam Komplit (Kecil)",category:"Mie",isWeekend:false},
+    {name:"Mie Ayam Biasa (Lebar)",category:"Mie",isWeekend:false},
+    {name:"Mie Ayam Baso (Lebar)",category:"Mie",isWeekend:false},
+    {name:"Mie Ayam Pangsit Rebus (Lebar)",category:"Mie",isWeekend:false},
+    {name:"Mie Ayam Komplit (Lebar)",category:"Mie",isWeekend:false},
+    {name:"Mie Yamin Biasa",category:"Mie",isWeekend:false},
+    {name:"Mie Yamin Baso",category:"Mie",isWeekend:false},
+    {name:"Mie Yamin Pangsit Rebus",category:"Mie",isWeekend:false},
+    {name:"Mie Yamin Komplit",category:"Mie",isWeekend:false},
+    {name:"Kwetiau Ayam Biasa",category:"Kwetiau",isWeekend:false},
+    {name:"Kwetiau Baso",category:"Kwetiau",isWeekend:false},
+    {name:"Kwetiau Pangsit Rebus",category:"Kwetiau",isWeekend:false},
+    {name:"Kwetiau Komplit",category:"Kwetiau",isWeekend:false},
+    {name:"Bihun Ayam Biasa",category:"Bihun",isWeekend:false},
+    {name:"Bihun Baso",category:"Bihun",isWeekend:false},
+    {name:"Bihun Pangsit Rebus",category:"Bihun",isWeekend:false},
+    {name:"Bihun Komplit",category:"Bihun",isWeekend:false},
+    {name:"Pangsit Rebus Ayam (5 Pcs)",category:"Baso",isWeekend:false},
+    {name:"Baso Sapi (5 Pcs)",category:"Baso",isWeekend:false},
+    {name:"Baso Ayam Sawi (5 Pcs)",category:"Baso",isWeekend:false},
+    {name:"Baso Ayam Sawi & Sapi (5 Pcs)",category:"Baso",isWeekend:false},
+    {name:"Baso Ayam Sawi & Pangsit Rebus (5 Pcs)",category:"Baso",isWeekend:false},
+    {name:"Nasi Uduk + Ayam Goreng",category:"Nasi Uduk",isWeekend:true},
+    {name:"Ayam Goreng",category:"Nasi Uduk",isWeekend:true},
+    {name:"Nasi Uduk Polos",category:"Nasi Uduk",isWeekend:true},
+    {name:"Nasi Uduk + Telur Dadar",category:"Nasi Uduk",isWeekend:true},
+    {name:"Nasi Uduk + Telur Ceplok Balado",category:"Nasi Uduk",isWeekend:true},
+    {name:"Sate Ayam Manis (3 Pcs)",category:"Sate",isWeekend:false},
+    {name:"Sate Ayam Manis (5 Pcs)",category:"Sate",isWeekend:false},
+    {name:"Sate Ayam Manis (10 Pcs)",category:"Sate",isWeekend:false},
+    {name:"Bubur Kacang Ijo",category:"Bubur Manis",isWeekend:false},
+    {name:"Bubur Ketan Item",category:"Bubur Manis",isWeekend:false},
+    {name:"Bubur Mix",category:"Bubur Manis",isWeekend:false},
+    {name:"Kacang Ijo Crispy",category:"Bubur Manis",isWeekend:false},
+    {name:"Ketan Item Crispy",category:"Bubur Manis",isWeekend:false},
+    {name:"Mix Crispy",category:"Bubur Manis",isWeekend:false},
+    {name:"Dimsum Ayam Isi 3",category:"Dimsum",isWeekend:false},
+    {name:"Dimsum Ayam Isi 5",category:"Dimsum",isWeekend:false},
+    {name:"Dimsum Ayam Isi 10",category:"Dimsum",isWeekend:false},
+    {name:"Dimsum Ayam Frozen Isi 15",category:"Dimsum",isWeekend:false},
+    {name:"Cakwe Goreng",category:"Gorengan",isWeekend:false},
+    {name:"Pangsit Goreng Isi Ayam (5 Pcs)",category:"Gorengan",isWeekend:false},
+    {name:"Kulit Pangsit (3 Pcs)",category:"Gorengan",isWeekend:false},
+    {name:"Kulit Pangsit Basah (10 Pcs)",category:"Gorengan",isWeekend:false},
+    {name:"Sate Ati",category:"Jajanan",isWeekend:false},
+    {name:"Sate Ampela",category:"Jajanan",isWeekend:false},
+    {name:"Sate Usus",category:"Jajanan",isWeekend:false},
+    {name:"Sate Telur Puyuh",category:"Jajanan",isWeekend:false},
+    {name:"Sate Jantung",category:"Jajanan",isWeekend:false},
+    {name:"Sate Jendil",category:"Jajanan",isWeekend:false},
+    {name:"Kopi O",category:"Kopi",isWeekend:false},
+    {name:"Kopi O + Gula",category:"Kopi",isWeekend:false},
+    {name:"Kopi O + Susu",category:"Kopi",isWeekend:false},
+    {name:"Kopi O + 2 Egg",category:"Kopi",isWeekend:false},
+    {name:"Kopi O + 4 Egg",category:"Kopi",isWeekend:false},
+    {name:"Telur Rebus",category:"Minuman",isWeekend:false},
+    {name:"Sari Kacang Ijo",category:"Minuman",isWeekend:false},
+    {name:"Susu Kacang Kedelai",category:"Minuman",isWeekend:false},
+    {name:"Thai Tea",category:"Minuman",isWeekend:false},
+    {name:"Koffie Susu GRace",category:"Minuman",isWeekend:false},
+    {name:"Koffie Latte GRace",category:"Minuman",isWeekend:false},
+    {name:"Jeruk Murni",category:"Minuman",isWeekend:false},
+    {name:"Es Teh Tawar",category:"Minuman",isWeekend:false},
+    {name:"Es Teh Manis",category:"Minuman",isWeekend:false},
+    {name:"Teh Tawar Panas",category:"Minuman",isWeekend:false},
+    {name:"Teh Manis Panas",category:"Minuman",isWeekend:false},
+    {name:"Aqua Botol",category:"Minuman",isWeekend:false},
+    {name:"S-tee",category:"Minuman",isWeekend:false},
+    {name:"Extra Es Batu",category:"Minuman",isWeekend:false}
+];
 
-        /* ==============================================
-           VARIABEL GLOBAL
-        ============================================== */
-        var db = null;
-        var firebaseReady = false;
-        var storeMode = 'auto';
-        var scheduleData = null;
-        var stockData = {};
-        var weekendStockData = {};
-        var allOrders = {};
-        var DAYS = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
-        var DEFAULT_SCHED = {
-            0:{isOpen:true,open:'06:00',close:'12:00'},
-            1:{isOpen:false,open:'',close:''},
-            2:{isOpen:true,open:'06:00',close:'12:00'},
-            3:{isOpen:true,open:'06:00',close:'12:00'},
-            4:{isOpen:true,open:'06:00',close:'12:00'},
-            5:{isOpen:true,open:'06:00',close:'12:00'},
-            6:{isOpen:true,open:'06:00',close:'12:00'}
-        };
+/* ============================================
+   CATEGORY SWITCH CONFIG
+============================================ */
+var CAT_SWITCH_CONFIG = [
+    { key:"bubur", label:"Bubur", sub:"Bubur Ayam, Topping", icon:"fa-bowl-food", categories:["Bubur","Topping"], tab:"daily" },
+    { key:"mie", label:"Mie", sub:"Kecil, Lebar, Yamin", icon:"fa-utensils", categories:["Mie"], tab:"daily" },
+    { key:"baso", label:"Baso", sub:"Baso & Pangsit", icon:"fa-circle-dot", categories:["Baso"], tab:"daily" },
+    { key:"nasiUduk", label:"Nasi Uduk", sub:"Menu Weekend", icon:"fa-plate-wheat", categories:["Nasi Uduk"], tab:"weekend" }
+];
 
-        var firebaseConfig = {
-            apiKey: "AIzaSyCj__JH5w__RdSEqtR59Cr7ctEOyl6lzUg",
-            authDomain: "buburgrace.firebaseapp.com",
-            databaseURL: "https://buburgrace-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "buburgrace"
-        };
+/* ============================================
+   STATE
+============================================ */
+var db = null;
+var firebaseReady = false;
+var storeMode = 'auto';
+var scheduleData = null;
+var stockData = {};
+var weekendStockData = {};
+var categorySwitches = { bubur: true, mie: true, baso: true, nasiUduk: true };
+var allOrders = {};
 
-        /* ==============================================
-           LOGIN
-        ============================================== */
-        (function(){
-            var inp = document.getElementById('adminPassword');
-            var btn = document.getElementById('btnLogin');
+var DAYS = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
-            function tryLogin(){
-                var v = (inp.value||'').trim();
-                if(v === 'buburgrace123'){
-                    document.getElementById('loginError').innerHTML = '&nbsp;';
-                    btn.disabled = true;
-                    btn.textContent = 'MENGHUBUNGKAN...';
-                    document.getElementById('loginScreen').style.opacity = '0';
-                    setTimeout(function(){
-                        document.getElementById('loginScreen').style.display = 'none';
-                        document.getElementById('dashboardScreen').style.display = 'flex';
-                        initFirebase();
-                    }, 500);
+var DEFAULT_SCHED = {
+    0: { isOpen: true, open: '06:00', close: '12:00' },
+    1: { isOpen: false, open: '', close: '' },
+    2: { isOpen: true, open: '06:00', close: '12:00' },
+    3: { isOpen: true, open: '06:00', close: '12:00' },
+    4: { isOpen: true, open: '06:00', close: '12:00' },
+    5: { isOpen: true, open: '06:00', close: '12:00' },
+    6: { isOpen: true, open: '06:00', close: '12:00' }
+};
+
+var firebaseConfig = {
+    apiKey: "AIzaSyCj__JH5w__RdSEqtR59Cr7ctEOyl6lzUg",
+    authDomain: "buburgrace.firebaseapp.com",
+    databaseURL: "https://buburgrace-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "buburgrace"
+};
+
+/* ============================================
+   UTILITY
+============================================ */
+function fmtRp(n) {
+    return 'Rp ' + n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+function showToast(msg) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'show';
+    clearTimeout(t._timer);
+    t._timer = setTimeout(function() { t.className = ''; }, 2500);
+}
+
+function parseTime(str) {
+    if (!str || str.indexOf(':') === -1) return null;
+    var p = str.split(':');
+    return parseInt(p[0]) * 60 + parseInt(p[1]);
+}
+
+function fmtDate(ts) {
+    var d = new Date(ts);
+    return d.toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' }) + ' ' + d.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' });
+}
+
+/* ============================================
+   LOGIN
+============================================ */
+var ADMIN_PASSWORD = 'buburgrace123';
+var loginInput = document.getElementById('adminPassword');
+var loginBtn = document.getElementById('btnLogin');
+var loginError = document.getElementById('loginError');
+
+function doLogin() {
+    var val = loginInput.value.trim();
+    if (val === ADMIN_PASSWORD) {
+        loginError.innerHTML = '&nbsp;';
+        loginBtn.disabled = true;
+        loginBtn.textContent = 'MENGHUBUNGKAN...';
+        var loginScreen = document.getElementById('loginScreen');
+        var dashScreen = document.getElementById('dashboardScreen');
+        var loadingOverlay = document.getElementById('loadingOverlay');
+        loginScreen.style.opacity = '0';
+        setTimeout(function() {
+            loginScreen.style.display = 'none';
+            dashScreen.style.display = 'flex';
+            loadingOverlay.classList.add('show');
+            try { initFirebase(); } catch (err) {
+                console.error('Init Firebase error:', err);
+                loadingOverlay.classList.remove('show');
+                showError('Gagal inisialisasi Firebase.', err.message || String(err));
+            }
+        }, 500);
+    } else {
+        loginError.textContent = 'Password Salah! Coba lagi.';
+        loginInput.value = '';
+        loginInput.focus();
+    }
+}
+
+loginBtn.addEventListener('click', function(e) { e.preventDefault(); doLogin(); });
+loginInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); doLogin(); } });
+loginInput.addEventListener('input', function() { loginError.innerHTML = '&nbsp;'; });
+document.getElementById('btnLogout').addEventListener('click', function() { location.reload(); });
+
+/* ============================================
+   TAB SWITCHING
+============================================ */
+document.getElementById('navTabs').addEventListener('click', function(e) {
+    var tab = e.target.closest('.nav-tab');
+    if (!tab) return;
+    var name = tab.getAttribute('data-tab');
+    if (!name) return;
+    document.querySelectorAll('.tab-content').forEach(function(t) { t.style.display = 'none'; });
+    document.querySelectorAll('.nav-tab').forEach(function(t) { t.classList.remove('active'); });
+    tab.classList.add('active');
+    var el = document.getElementById('tab-' + name);
+    if (el) el.style.display = '';
+});
+
+/* ============================================
+   FIREBASE INIT
+============================================ */
+function initFirebase() {
+    var errorPanel = document.getElementById('errorPanel');
+    var loadingOverlay = document.getElementById('loadingOverlay');
+    errorPanel.classList.remove('show');
+    if (typeof firebase === 'undefined') {
+        loadingOverlay.classList.remove('show');
+        showError('Firebase SDK tidak berhasil dimuat.', 'Pastikan ada koneksi internet dan coba reload halaman.');
+        return;
+    }
+    try {
+        var existing = firebase.apps.find(function(a) { return a.name === '[DEFAULT]'; });
+        if (existing) { db = existing.database(); testConnection(); return; }
+    } catch (e) {}
+    try { firebase.initializeApp(firebaseConfig); } catch (e) {
+        loadingOverlay.classList.remove('show');
+        showError('Gagal inisialisasi Firebase App.', e.message || String(e));
+        return;
+    }
+    try { db = firebase.database(); testConnection(); } catch (e) {
+        loadingOverlay.classList.remove('show');
+        showError('Gagal membuat koneksi database.', e.message || String(e));
+    }
+}
+
+/* ============================================
+   TEST CONNECTION
+============================================ */
+function testConnection() {
+    var errorPanel = document.getElementById('errorPanel');
+    var errorDetail = document.getElementById('errorDetail');
+    var retryBtn = document.getElementById('btnRetry');
+    var loadingOverlay = document.getElementById('loadingOverlay');
+    errorDetail.textContent = 'Sedang menghubungkan ke Firebase...';
+    errorPanel.classList.add('show');
+    retryBtn.disabled = true;
+    retryBtn.innerHTML = '<span class="spinner-icon"><i class="fa-solid fa-spinner fa-spin"></i></span><i class="fa-solid fa-rotate-right"></i> Menghubungkan...';
+    var timeout = setTimeout(function() {
+        retryBtn.disabled = false;
+        retryBtn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> Coba Lagi';
+        loadingOverlay.classList.remove('show');
+        showError('Timeout — Firebase tidak merespons dalam 10 detik.', 'Kemungkinan:\n1. Koneksi internet lambat\n2. Firebase RTDB belum dibuat di Console\n3. Database URL salah\n\nURL: ' + firebaseConfig.databaseURL);
+    }, 10000);
+    var testRef = db.ref('bubur_grace/status');
+    testRef.once('value', function(snapshot) {
+        clearTimeout(timeout);
+        retryBtn.disabled = false;
+        retryBtn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> Coba Lagi';
+        firebaseReady = true;
+        errorPanel.classList.remove('show');
+        loadingOverlay.classList.remove('show');
+        startListeners();
+    }, function(error) {
+        clearTimeout(timeout);
+        retryBtn.disabled = false;
+        retryBtn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> Coba Lagi';
+        loadingOverlay.classList.remove('show');
+        var errorCode = error.code || '';
+        var errorMessage = error.message || String(error);
+        console.error('[Firebase Error]', errorCode, errorMessage);
+        if (errorCode.indexOf('permission') !== -1) {
+            showError('AKSES DITOLAK — Firebase Rules belum diatur!', 'SOLUSI:\n\n1. Buka console.firebase.google.com\n2. Pilih project "buburgrace"\n3. Klik "Realtime Database"\n4. Klik tab "Rules"\n5. Ganti isi rules dengan:\n\n{\n  "rules": {\n    "bubur_grace": {\n      ".read": true,\n      ".write": true\n    }\n  }\n}\n\n6. Klik "Publish"\n7. Kembali ke sini, klik "Coba Lagi"\n\nError: ' + errorMessage);
+        } else {
+            showError('Gagal terhubung ke Firebase.', 'Error: ' + errorCode + '\n' + errorMessage + '\n\nURL: ' + firebaseConfig.databaseURL + '\n\nPastikan:\n1. Internet aktif\n2. Realtime Database sudah dibuat di Firebase Console\n3. Rules sudah diatur');
+        }
+    });
+}
+
+function showError(title, detail) {
+    document.getElementById('errorDetail').textContent = title + '\n\n' + (detail || '');
+    document.getElementById('errorPanel').classList.add('show');
+}
+
+document.getElementById('btnRetry').addEventListener('click', function() {
+    var btn = this;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-icon"><i class="fa-solid fa-spinner fa-spin"></i></span><i class="fa-solid fa-rotate-right"></i> Menghubungkan...';
+    setTimeout(function() {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> Coba Lagi';
+        if (!db) { initFirebase(); } else { testConnection(); }
+    }, 1000);
+});
+
+/* ============================================
+   MIGRATE OLD STOCK FORMAT
+============================================ */
+function migrateStock(path, callback) {
+    if (!db) return;
+    db.ref(path).once('value', function(snapshot) {
+        var raw = snapshot.val() || {};
+        var needsMigrate = false;
+        for (var k in raw) { if (typeof raw[k] === 'number') { needsMigrate = true; break; } }
+        if (needsMigrate) {
+            var migrated = {};
+            for (var k in raw) { migrated[k] = (typeof raw[k] === 'number') ? (raw[k] > 0) : !!raw[k]; }
+            db.ref(path).set(migrated).then(function() { callback(migrated); });
+        } else { callback(raw); }
+    });
+}
+
+/* ============================================
+   START ALL LISTENERS
+============================================ */
+function startListeners() {
+    document.getElementById('errorPanel').classList.remove('show');
+    document.getElementById('loadingOverlay').classList.remove('show');
+
+    migrateStock('bubur_grace/stock', function(data) {
+        stockData = {};
+        for (var k in data) stockData[k] = !!data[k];
+        renderDailyStock();
+    });
+
+    migrateStock('bubur_grace/weekendStock', function(data) {
+        weekendStockData = {};
+        for (var k in data) weekendStockData[k] = !!data[k];
+        renderWeekendStock();
+    });
+
+    db.ref('bubur_grace/status').on('value', function(snapshot) {
+        storeMode = snapshot.val() || 'auto';
+        refreshModeUI();
+        tickStatus();
+    });
+
+    db.ref('bubur_grace/config/schedule').on('value', function(snapshot) {
+        var raw = snapshot.val();
+        if (raw && typeof raw === 'object') {
+            scheduleData = {};
+            for (var i = 0; i < 7; i++) {
+                var entry = raw[i] !== undefined ? raw[i] : (raw[String(i)] !== undefined ? raw[String(i)] : null);
+                if (entry && typeof entry === 'object') {
+                    scheduleData[i] = { isOpen: !!entry.isOpen, open: entry.open || '', close: entry.close || '' };
                 } else {
-                    document.getElementById('loginError').textContent = 'Password Salah! Coba lagi.';
-                    inp.value = '';
-                    inp.focus();
+                    scheduleData[i] = { isOpen: false, open: '', close: '' };
                 }
             }
+        } else {
+            scheduleData = JSON.parse(JSON.stringify(DEFAULT_SCHED));
+            db.ref('bubur_grace/config').set({ schedule: scheduleData });
+        }
+        renderScheduleUI(scheduleData);
+        tickStatus();
+    });
 
-            btn.addEventListener('click', tryLogin);
-            inp.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.keyCode===13){e.preventDefault();tryLogin();} });
-            inp.addEventListener('keyup', function(e){ if(e.key==='Enter'||e.keyCode===13){e.preventDefault();tryLogin();} });
-            inp.addEventListener('input', function(){ document.getElementById('loginError').innerHTML = '&nbsp;'; });
-        })();
+    db.ref('bubur_grace/stock').on('value', function(snapshot) {
+        var raw = snapshot.val() || {};
+        stockData = {};
+        for (var k in raw) { var v = raw[k]; stockData[k] = (typeof v === 'number') ? (v > 0) : !!v; }
+        renderDailyStock();
+    });
 
-        function logout(){ location.reload(); }
+    db.ref('bubur_grace/weekendStock').on('value', function(snapshot) {
+        var raw = snapshot.val() || {};
+        weekendStockData = {};
+        for (var k in raw) { var v = raw[k]; weekendStockData[k] = (typeof v === 'number') ? (v > 0) : !!v; }
+        renderWeekendStock();
+    });
 
-        /* ==============================================
-           TAB SWITCHING
-        ============================================== */
-        document.getElementById('navTabs').addEventListener('click', function(e){
-            var t = e.target.closest('.nav-tab');
-            if(!t) return;
-            var name = t.getAttribute('data-tab');
-            if(!name) return;
-            var all = document.querySelectorAll('.tab-content');
-            for(var i=0;i<all.length;i++) all[i].style.display='none';
-            var tabs = document.querySelectorAll('.nav-tab');
-            for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('active');
-            t.classList.add('active');
-            var el = document.getElementById('tab-'+name);
-            if(el) el.style.display='';
+    db.ref('bubur_grace/categorySwitches').on('value', function(snapshot) {
+        var raw = snapshot.val();
+        if (raw && typeof raw === 'object') {
+            for (var k in categorySwitches) { if (raw[k] !== undefined) categorySwitches[k] = !!raw[k]; }
+        }
+        renderCategorySwitches();
+        renderDailyStock();
+        renderWeekendStock();
+    });
+
+    db.ref('bubur_grace/daily_stats').on('value', function(snapshot) {
+        var d = snapshot.val();
+        document.getElementById('statOmset').innerText = d ? fmtRp(d.total || 0) : 'Rp 0';
+        document.getElementById('statOrders').innerText = d ? (d.count || 0) : '0';
+    });
+
+    db.ref('bubur_grace/orders').limitToLast(100).on('value', function(snapshot) {
+        allOrders = snapshot.val() || {};
+        refreshActivity();
+        refreshTopMenu();
+        renderHistory();
+    });
+
+    renderCategorySwitches();
+    renderDailyStock();
+    renderWeekendStock();
+}
+
+/* ============================================
+   RENDER: CATEGORY SWITCHES
+============================================ */
+function renderCategorySwitches() {
+    CAT_SWITCH_CONFIG.forEach(function(cfg) {
+        var gridId = cfg.tab === 'daily' ? 'dailyCatSwitchGrid' : 'weekendCatSwitchGrid';
+        var grid = document.getElementById(gridId);
+        if (!grid) return;
+        var isOn = !!categorySwitches[cfg.key];
+        var html = '<div class="cat-switch-item ' + (isOn ? 'is-on' : 'is-off') + '" data-sw-key="' + cfg.key + '">';
+        html += '<div class="cat-switch-left"><div class="cat-switch-icon"><i class="fa-solid ' + cfg.icon + '"></i></div>';
+        html += '<div><div class="cat-switch-name">' + cfg.label + '</div><div class="cat-switch-sub">' + cfg.sub + '</div></div></div>';
+        html += '<label class="switch"><input type="checkbox" ' + (isOn ? 'checked' : '') + ' data-sw-key="' + cfg.key + '"><span class="slider"></span></label>';
+        html += '</div>';
+        grid.innerHTML = html;
+
+        grid.querySelector('input[type="checkbox"]').addEventListener('change', function() {
+            var key = this.getAttribute('data-sw-key');
+            var val = this.checked;
+            db.ref('bubur_grace/categorySwitches/' + key).set(val);
+            categorySwitches[key] = val;
+            renderCategorySwitches();
+            renderDailyStock();
+            renderWeekendStock();
+        });
+    });
+}
+
+/* ============================================
+   RENDER: DAILY STOCK
+============================================ */
+function renderDailyStock() {
+    var container = document.getElementById('dailyStockList');
+    if (!container) return;
+    var search = (document.getElementById('dailySearch').value || '').toLowerCase().trim();
+    var html = '';
+    var lastCat = '';
+
+    menuItems.forEach(function(item) {
+        if (item.isWeekend) return;
+        if (search && item.name.toLowerCase().indexOf(search) === -1) return;
+
+        if (item.category !== lastCat) {
+            lastCat = item.category;
+            html += '<div class="category-label">' + lastCat + '</div>';
+        }
+
+        var isOn = stockData[item.name] !== false;
+        var catOff = false;
+        CAT_SWITCH_CONFIG.forEach(function(cfg) {
+            if (cfg.tab === 'daily' && cfg.categories.indexOf(item.category) !== -1 && !categorySwitches[cfg.key]) {
+                catOff = true;
+            }
         });
 
-        /* ==============================================
-           INIT FIREBASE — DENGAN ERROR HANDLING LENGKAP
-        ============================================== */
-        function initFirebase(){
-            var errorPanel = document.getElementById('errorPanel');
-            var errorDetail = document.getElementById('errorDetail');
+        var disabledClass = catOff ? ' is-disabled' : '';
+        var offClass = (!isOn && !catOff) ? ' is-off' : '';
+        var tagHtml = '';
+        if (catOff) tagHtml = '<span class="disabled-tag">Kategori OFF</span>';
+        else if (!isOn) tagHtml = '<span class="off-tag">Habis</span>';
 
-            /* Sembunyikan error panel dulu */
-            errorPanel.classList.remove('show');
+        html += '<div class="stock-item' + offClass + disabledClass + '">';
+        html += '<div class="item-info"><h4>' + item.name + '</h4>' + tagHtml + '</div>';
+        html += '<label class="switch"><input type="checkbox" ' + (isOn ? 'checked' : '') + ' ' + (catOff ? 'disabled' : '') + ' data-stock-name="' + item.name + '" data-stock-type="daily"><span class="slider"></span></label>';
+        html += '</div>';
+    });
 
-            /* STEP 1: Cek apakah SDK Firebase berhasil dimuat */
-            if(typeof firebase === 'undefined'){
-                showError('Firebase SDK tidak berhasil dimuat dari CDN.', 'Pastikan ada koneksi internet dan coba reload halaman. Jika masih gagal, coba gunakan browser lain atau buka file ini langsung (bukan via Live Server).');
-                return;
-            }
+    if (!html) html = '<div style="text-align:center;padding:30px;color:#999;">Tidak ada menu ditemukan</div>';
+    container.innerHTML = html;
 
-            /* STEP 2: Cek apakah Firebase App sudah pernah diinisialisasi */
-            try {
-                var existingApp = firebase.apps.find(function(app){ return app.name === '[DEFAULT]'; });
-                if(existingApp){
-                    db = existingApp.database();
-                    firebaseReady = true;
-                    startListeners();
-                    return;
-                }
-            } catch(e){
-                /* abaikan, lanjut inisialisasi */
-            }
-
-            /* STEP 3: Inisialisasi Firebase App */
-            try {
-                firebase.initializeApp(firebaseConfig);
-            } catch(initErr){
-                showError('Gagal menginisialisasi Firebase App.', initErr.message || String(initErr));
-                return;
-            }
-
-            /* STEP 4: Cek koneksi database */
-            try {
-                db = firebase.database();
-
-                /* Test koneksi dengan sekali baca */
-                var connRef = db.ref('.info/connected');
-                var connTimeout = setTimeout(function(){
-                    showError('Timeout — tidak ada respons dari Firebase dalam 8 detik.', 'Koneksi internet mungkin lambat atau Firebase RTDB sedang down. Coba lagi beberapa saat.');
-                }, 8000);
-
-                connRef.once('value', function(snap){
-                    clearTimeout(connTimeout);
-                    var connected = snap.val();
-                    if(connected === true){
-                        firebaseReady = true;
-                        startListeners();
-                    } else {
-                        showError('Firebase terputus (connected: false).', 'Koneksi internet terputus sementara. Coba cek koneksi lalu klik "Coba Lagi".');
-                    }
-                }, function(err){
-                    clearTimeout(connTimeout);
-                    var msg = err.message || String(err);
-                    if(msg.indexOf('permission') !== -1){
-                        showError('Akses ditolak oleh Firebase Rules.', 'Rules di Firebase Console mungkin belum diatur. Pastikan rules mengizinkan baca/tulis untuk path "bubur_grace/".\n\nError: ' + msg);
-                    } else {
-                        showError('Gagal terhubung ke Firebase Realtime Database.', msg);
-                    }
-                });
-
-            } catch(dbErr){
-                showError('Gagal membuat koneksi database.', dbErr.message || String(dbErr));
-            }
-        }
-
-        function showError(summary, detail){
-            document.getElementById('errorDetail').textContent = summary + '\n\n' + (detail || '');
-            document.getElementById('errorPanel').classList.add('show');
-            console.error('[Firebase Error]', summary, detail);
-        }
-
-        /* Tombol Retry */
-        document.getElementById('btnRetry').addEventListener('click', function(){
-            var btn = this;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menghubungkan...';
-            
-            setTimeout(function(){
-                /* Coba ulang dari awal */
-                try {
-                    /* Hapus app yang lama kalau ada */
-                    var oldApp = firebase.apps.find(function(a){ return a.name === '[DEFAULT]'; });
-                    if(oldApp){
-                        oldApp.delete().then(function(){
-                            initFirebase();
-                            btn.disabled = false;
-                            btn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> Coba Lagi';
-                        }).catch(function(){
-                            initFirebase();
-                            btn.disabled = false;
-                            btn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> Coba Lagi';
-                        });
-                    } else {
-                        initFirebase();
-                        btn.disabled = false;
-                        btn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> Coba Lagi';
-                    }
-                } catch(e){
-                    initFirebase();
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> Coba Lagi';
-                }
-            }, 1000);
+    container.querySelectorAll('input[data-stock-type="daily"]').forEach(function(inp) {
+        inp.addEventListener('change', function() {
+            var name = this.getAttribute('data-stock-name');
+            var val = this.checked;
+            db.ref('bubur_grace/stock/' + name).set(val);
+            stockData[name] = val;
+            renderDailyStock();
         });
+    });
+}
 
-        /* ==============================================
-           START LISTENERS — dipanggil setelah Firebase siap
-        ============================================== */
-        function startListeners(){
-            document.getElementById('errorPanel').classList.remove('show');
+document.getElementById('dailySearch').addEventListener('input', function() { renderDailyStock(); });
 
-            /* 1. Mode override */
-            db.ref('bubur_grace/status').on('value', function(s){
-                storeMode = s.val() || 'auto';
-                refreshModeUI();
-                tickStatus();
-            });
+/* ============================================
+   RENDER: WEEKEND STOCK
+============================================ */
+function renderWeekendStock() {
+    var container = document.getElementById('weekendStockList');
+    if (!container) return;
+    var search = (document.getElementById('weekendSearch').value || '').toLowerCase().trim();
+    var html = '';
+    var lastCat = '';
 
-            /* 2. Jadwal */
-            db.ref('bubur_grace/config/schedule').on('value', function(s){
-                var raw = s.val();
-                if(raw !== null && typeof raw === 'object'){
-                    scheduleData = {};
-                    for(var i=0;i<7;i++){
-                        var e = raw[i] !== undefined ? raw[i] : (raw[String(i)] !== undefined ? raw[String(i)] : null);
-                        if(e && typeof e === 'object'){
-                            scheduleData[i] = { isOpen: !!e.isOpen, open: e.open||'', close: e.close||'' };
-                        } else {
-                            scheduleData[i] = { isOpen: false, open: '', close: '' };
-                        }
-                    }
-                } else {
-                    scheduleData = JSON.parse(JSON.stringify(DEFAULT_SCHED));
-                    db.ref('bubur_grace/config').set({ schedule: scheduleData });
-                }
-                renderScheduleUI(scheduleData);
-                tickStatus();
-            });
+    menuItems.forEach(function(item) {
+        if (!item.isWeekend) return;
+        if (search && item.name.toLowerCase().indexOf(search) === -1) return;
 
-            /* 3. Stock */
-            db.ref('bubur_grace/stock').on('value', function(s){ stockData = s.val()||{}; renderAllStock(); });
-            db.ref('bubur_grace/weekendStock').on('value', function(s){ weekendStockData = s.val()||{}; renderAllStock(); });
-
-            /* 4. Stats */
-            db.ref('bubur_grace/daily_stats').on('value', function(s){
-                var d=s.val();
-                document.getElementById('statOmset').innerText = d ? fmtRp(d.total||0) : 'Rp 0';
-                document.getElementById('statOrders').innerText = d ? (d.count||0) : '0';
-            });
-
-            /* 5. Orders */
-            db.ref('bubur_grace/orders').limitToLast(100).on('value', function(s){
-                allOrders = s.val()||{};
-                refreshActivity();
-                refreshTopMenu();
-                renderHistory();
-            });
-
-            renderAllStock();
-            showToast('Firebase terhubung!');
+        if (item.category !== lastCat) {
+            lastCat = item.category;
+            html += '<div class="category-label">' + lastCat + '</div>';
         }
 
-        /* ==============================================
-           REAL-TIME STATUS ENGINE
-        ============================================== */
-        function tickStatus(){
-            if(!scheduleData) return;
+        var isOn = weekendStockData[item.name] !== false;
+        var catOff = !categorySwitches.nasiUduk;
 
-            var now = new Date();
-            var todayIdx = now.getDay();
-            var curMin = now.getHours() * 60 + now.getMinutes();
-            var today = scheduleData[todayIdx];
+        var disabledClass = catOff ? ' is-disabled' : '';
+        var offClass = (!isOn && !catOff) ? ' is-off' : '';
+        var tagHtml = '';
+        if (catOff) tagHtml = '<span class="disabled-tag">Kategori OFF</span>';
+        else if (!isOn) tagHtml = '<span class="off-tag">Habis</span>';
 
-            var state = 'closed';
-            var detail = '';
+        html += '<div class="stock-item' + offClass + disabledClass + '">';
+        html += '<div class="item-info"><h4>' + item.name + '</h4>' + tagHtml + '</div>';
+        html += '<label class="switch"><input type="checkbox" ' + (isOn ? 'checked' : '') + ' ' + (catOff ? 'disabled' : '') + ' data-stock-name="' + item.name + '" data-stock-type="weekend"><span class="slider"></span></label>';
+        html += '</div>';
+    });
 
-            if(storeMode === 'close'){
-                state = 'closed';
-                detail = 'Mode Paksa Tutup aktif';
-            } else if(storeMode === 'open'){
-                state = 'open';
-                detail = 'Mode Paksa Buka aktif — semua menu termasuk Weekend';
+    if (!html) html = '<div style="text-align:center;padding:30px;color:#999;">Tidak ada menu ditemukan</div>';
+    container.innerHTML = html;
+
+    container.querySelectorAll('input[data-stock-type="weekend"]').forEach(function(inp) {
+        inp.addEventListener('change', function() {
+            var name = this.getAttribute('data-stock-name');
+            var val = this.checked;
+            db.ref('bubur_grace/weekendStock/' + name).set(val);
+            weekendStockData[name] = val;
+            renderWeekendStock();
+        });
+    });
+}
+
+document.getElementById('weekendSearch').addEventListener('input', function() { renderWeekendStock(); });
+
+/* ============================================
+   RENDER: SCHEDULE UI
+============================================ */
+function renderScheduleUI(sched) {
+    if (!sched) return;
+    var today = new Date().getDay();
+    var html = '';
+
+    for (var i = 0; i < 7; i++) {
+        var s = sched[i] || { isOpen: false, open: '', close: '' };
+        var isToday = (i === today);
+        var rowClass = 'sched-row';
+        if (isToday) rowClass += ' is-today';
+        if (!s.isOpen) rowClass += ' is-closed-row';
+
+        html += '<div class="' + rowClass + '">';
+        html += '<div class="sched-day">' + DAYS[i] + '<span class="today-badge">HARI INI</span></div>';
+
+        if (s.isOpen) {
+            html += '<div class="sched-times" id="schedTimes_' + i + '">';
+            html += '<input type="time" value="' + (s.open || '') + '" id="schedOpen_' + i + '">';
+            html += '<span class="time-dash">—</span>';
+            html += '<input type="time" value="' + (s.close || '') + '" id="schedClose_' + i + '">';
+            html += '</div>';
+            html += '<div class="sched-closed-text" id="schedClosedText_' + i + '">Tutup</div>';
+        } else {
+            html += '<div class="sched-times tg-off" id="schedTimes_' + i + '">';
+            html += '<input type="time" value="' + (s.open || '') + '" id="schedOpen_' + i + '" disabled>';
+            html += '<span class="time-dash">—</span>';
+            html += '<input type="time" value="' + (s.close || '') + '" id="schedClose_' + i + '" disabled>';
+            html += '</div>';
+            html += '<div class="sched-closed-text show" id="schedClosedText_' + i + '">Tutup</div>';
+        }
+
+        html += '<div class="sched-sw">';
+        html += '<span class="sw-label">' + (s.isOpen ? 'ON' : 'OFF') + '</span>';
+        html += '<label class="switch"><input type="checkbox" ' + (s.isOpen ? 'checked' : '') + ' data-sched-day="' + i + '"><span class="slider"></span></label>';
+        html += '</div>';
+        html += '</div>';
+    }
+
+    document.getElementById('schedContainer').innerHTML = html;
+
+    /* Bind toggle per hari */
+    document.querySelectorAll('input[data-sched-day]').forEach(function(sw) {
+        sw.addEventListener('change', function() {
+            var day = parseInt(this.getAttribute('data-sched-day'));
+            var isOn = this.checked;
+            var timesDiv = document.getElementById('schedTimes_' + day);
+            var closedText = document.getElementById('schedClosedText_' + day);
+            var openInput = document.getElementById('schedOpen_' + day);
+            var closeInput = document.getElementById('schedClose_' + day);
+
+            if (isOn) {
+                timesDiv.classList.remove('tg-off');
+                openInput.disabled = false;
+                closeInput.disabled = false;
+                closedText.classList.remove('show');
             } else {
-                if(!today || !today.isOpen){
-                    state = 'closed';
-                    var nx = findNext(todayIdx);
-                    detail = nx ? 'Hari ini (' + DAYS[todayIdx] + ') libur — buka ' + DAYS[nx.d] + ' ' + fmtT(nx.o) : 'Hari ini (' + DAYS[todayIdx] + ') libur';
-                } else {
-                    var oMin = toMin(today.open);
-                    var cMin = toMin(today.close);
-                    if(curMin < oMin){
-                        state = 'waiting';
-                        detail = 'Belum buka — buka jam ' + fmtT(today.open) + ' (tutup jam ' + fmtT(today.close) + ')';
-                    } else if(curMin >= oMin && curMin < cMin){
-                        state = 'open';
-                        detail = 'Buka sekarang — sampai jam ' + fmtT(today.close) + ' (' + fmtT(today.open) + ' - ' + fmtT(today.close) + ')';
-                    } else {
-                        state = 'closed';
-                        var nx2 = findNext(todayIdx);
-                        detail = nx2 ? 'Sudah tutup (' + fmtT(today.close) + ') — buka ' + DAYS[nx2.d] + ' ' + fmtT(nx2.o) : 'Sudah tutup (' + fmtT(today.close) + ')';
-                    }
-                }
+                timesDiv.classList.add('tg-off');
+                openInput.disabled = true;
+                closeInput.disabled = true;
+                closedText.classList.add('show');
             }
 
-            var card = document.getElementById('liveCard');
-            var icon = document.getElementById('liveIcon');
-            var txt = document.getElementById('liveStatusText');
-            var dot = document.getElementById('liveDot');
-            var dtxt = document.getElementById('liveDetailText');
+            /* Update sw-label text */
+            var label = this.closest('.sched-sw').querySelector('.sw-label');
+            label.textContent = isOn ? 'ON' : 'OFF';
+        });
+    });
+}
 
-            card.className = 'live-card card-' + state;
-            icon.className = 'live-icon-box ic-' + state;
-            icon.innerHTML = state==='open' ? '<i class="fa-solid fa-store"></i>' : state==='waiting' ? '<i class="fa-solid fa-hourglass-half"></i>' : '<i class="fa-solid fa-store-slash"></i>';
-            txt.className = 'live-status s-' + state;
-            txt.textContent = state==='open' ? 'BUKA' : state==='waiting' ? 'SEGERA BUKA' : 'TUTUP';
-            dot.className = 'live-dot d-' + state;
-            dtxt.textContent = detail;
+/* Save schedule */
+document.getElementById('btnSaveSched').addEventListener('click', function() {
+    var newSched = {};
+    for (var i = 0; i < 7; i++) {
+        var sw = document.querySelector('input[data-sched-day="' + i + '"]');
+        var openVal = document.getElementById('schedOpen_' + i).value;
+        var closeVal = document.getElementById('schedClose_' + i).value;
+        newSched[i] = {
+            isOpen: sw ? sw.checked : false,
+            open: openVal,
+            close: closeVal
+        };
+    }
+    db.ref('bubur_grace/config/schedule').set(newSched).then(function() {
+        showToast('Jadwal berhasil disimpan!');
+    }).catch(function(err) {
+        showToast('Gagal menyimpan: ' + err.message);
+    });
+});
+
+/* ============================================
+   REFRESH: MODE UI (Override)
+============================================ */
+function refreshModeUI() {
+    document.querySelectorAll('.mode-opt').forEach(function(opt) {
+        var mode = opt.getAttribute('data-mode');
+        opt.classList.remove('sel-auto', 'sel-open', 'sel-close');
+        if (mode === storeMode) opt.classList.add('sel-' + mode);
+    });
+}
+
+document.querySelectorAll('.mode-opt').forEach(function(opt) {
+    opt.addEventListener('click', function() {
+        var mode = this.getAttribute('data-mode');
+        db.ref('bubur_grace/status').set(mode);
+        storeMode = mode;
+        refreshModeUI();
+        tickStatus();
+        showToast('Mode diubah: ' + (mode === 'auto' ? 'Otomatis' : mode === 'open' ? 'Paksa Buka' : 'Paksa Tutup'));
+    });
+});
+
+/* ============================================
+   TICK STATUS (Real-time clock & status)
+============================================ */
+function tickStatus() {
+    var now = new Date();
+    var day = now.getDay();
+    var minutes = now.getHours() * 60 + now.getMinutes();
+
+    /* Clock */
+    document.getElementById('liveClock').textContent = now.toLocaleTimeString('id-ID');
+
+    var actualOpen = false;
+    var detailText = '';
+
+    if (storeMode === 'open') {
+        actualOpen = true;
+        detailText = 'Mode: PAKSA BUKA (darurat)';
+    } else if (storeMode === 'close') {
+        actualOpen = false;
+        detailText = 'Mode: PAKSA TUTUP (darurat)';
+    } else {
+        var sched = scheduleData ? (scheduleData[day] || scheduleData[String(day)]) : null;
+        if (sched && sched.isOpen) {
+            var openT = parseTime(sched.open);
+            var closeT = parseTime(sched.close);
+            if (openT !== null && closeT !== null && minutes >= openT && minutes < closeT) {
+                actualOpen = true;
+                detailText = 'Otomatis: ' + sched.open + ' - ' + sched.close + ' (Dalam jadwal)';
+            } else {
+                actualOpen = false;
+                if (minutes < openT) detailText = 'Otomatis: Belum buka (buka ' + sched.open + ')';
+                else detailText = 'Otomatis: Sudah lewat jam tutup (' + sched.close + ')';
+            }
+        } else {
+            actualOpen = false;
+            detailText = 'Otomatis: Hari ini tutup (tidak ada jadwal)';
         }
+    }
 
-        setInterval(function(){
-            var n=new Date();
-            document.getElementById('liveClock').textContent = String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0');
-        }, 1000);
-        setInterval(tickStatus, 10000);
+    document.getElementById('liveDetailText').textContent = detailText;
 
-        function findNext(fromIdx){
-            for(var i=1;i<=7;i++){var idx=(fromIdx+i)%7;var c=scheduleData[idx];if(c&&c.isOpen&&c.open) return {d:idx,o:c.open};}
-            return null;
+    var card = document.getElementById('liveCard');
+    var icon = document.getElementById('liveIcon');
+    var statusText = document.getElementById('liveStatusText');
+    var dot = document.getElementById('liveDot');
+
+    card.classList.remove('card-open', 'card-closed', 'card-waiting');
+    icon.classList.remove('ic-open', 'ic-closed', 'ic-waiting');
+    statusText.classList.remove('s-open', 's-closed', 's-waiting');
+    dot.classList.remove('d-open', 'd-closed', 'd-waiting');
+
+    if (actualOpen) {
+        card.classList.add('card-open');
+        icon.classList.add('ic-open');
+        icon.innerHTML = '<i class="fa-solid fa-store"></i>';
+        statusText.classList.add('s-open');
+        statusText.textContent = 'BUKA';
+        dot.classList.add('d-open');
+    } else {
+        card.classList.add('card-closed');
+        icon.classList.add('ic-closed');
+        icon.innerHTML = '<i class="fa-solid fa-store-slash"></i>';
+        statusText.classList.add('s-closed');
+        statusText.textContent = 'TUTUP';
+        dot.classList.add('d-closed');
+    }
+}
+
+setInterval(tickStatus, 1000);
+
+/* ============================================
+   REFRESH: ACTIVITY & TOP MENU
+============================================ */
+function refreshActivity() {
+    var container = document.getElementById('recentActivityList');
+    var keys = Object.keys(allOrders).sort(function(a, b) { return b - a; }).slice(0, 10);
+
+    if (keys.length === 0) {
+        container.innerHTML = '<div style="text-align:center;padding:15px;color:#ccc;">Belum ada pesanan</div>';
+        return;
+    }
+
+    var html = '';
+    keys.forEach(function(key) {
+        var order = allOrders[key];
+        if (!order) return;
+        var ident = order.meja || order.nama || '-';
+        var itemCount = order.items ? order.items.length : 0;
+        var statusInfo = '';
+        if (order.items) {
+            var hasDine = false, hasAway = false;
+            order.items.forEach(function(it) { if (it.status === 'dine') hasDine = true; else hasAway = true; });
+            if (hasDine && hasAway) statusInfo = ' 🍽️🛍️';
+            else if (hasDine) statusInfo = ' 🍽️';
+            else if (hasAway) statusInfo = ' 🛍️';
         }
-        function toMin(s){if(!s) return 0;var p=s.split(':');return (parseInt(p[0])||0)*60+(parseInt(p[1])||0);}
-        function fmtT(s){
-            if(!s) return '-';var p=s.split(':');var h=parseInt(p[0])||0,m=parseInt(p[1])||0;var hr=h,per='';
-            if(h===0){hr=12;per='malam';}else if(h<11){per='pagi';}else if(h<15){per='siang';}else if(h<18){per='sore';}else{hr=h-12;per='malam';}
-            return hr+'.'+String(m).padStart(2,'0')+' '+per;
-        }
+        html += '<div class="activity-item">';
+        html += '<strong>' + fmtRp(order.total || 0) + '</strong> — ' + ident + statusInfo + ' (' + itemCount + ' item) — <span style="color:#aaa;font-size:.8rem;">' + fmtDate(order.timestamp) + '</span>';
+        html += '</div>';
+    });
 
-        /* ==============================================
-           MODE OVERRIDE UI
-        ============================================== */
-        function refreshModeUI(){
-            var opts = document.querySelectorAll('.mode-opt');
-            for(var i=0;i<opts.length;i++) opts[i].className = 'mode-opt';
-            if(storeMode==='auto') document.getElementById('opt-auto').classList.add('sel-auto');
-            else if(storeMode==='open') document.getElementById('opt-open').classList.add('sel-open');
-            else document.getElementById('opt-close').classList.add('sel-close');
-        }
+    container.innerHTML = html;
+}
 
-        document.addEventListener('click', function(e){
-            var opt = e.target.closest('.mode-opt');
-            if(!opt) return;
-            var m = opt.getAttribute('data-mode');
-            if(!m || !db) return;
-            db.ref('bubur_grace/status').set(m, function(err){
-                if(err) showToast('Gagal!',true);
-                else { var lb={auto:'Otomatis',open:'Paksa Buka',close:'Paksa Tutup'}; showToast('Mode: '+lb[m]); }
+function refreshTopMenu() {
+    var counts = {};
+    Object.keys(allOrders).forEach(function(key) {
+        var order = allOrders[key];
+        if (!order || !order.items) return;
+        order.items.forEach(function(item) {
+            var n = item.name;
+            counts[n] = (counts[n] || 0) + (item.qty || 1);
+        });
+    });
+
+    var topName = '-';
+    var topCount = 0;
+    for (var k in counts) {
+        if (counts[k] > topCount) { topCount = counts[k]; topName = k; }
+    }
+
+    document.getElementById('statTop').textContent = topCount > 0 ? topName : '-';
+}
+
+/* ============================================
+   RENDER: HISTORY
+============================================ */
+function renderHistory() {
+    var container = document.getElementById('ordersList');
+    var keys = Object.keys(allOrders).sort(function(a, b) { return b - a; });
+
+    if (keys.length === 0) {
+        container.innerHTML = '<div style="text-align:center;padding:30px;color:#999;">Belum ada riwayat pesanan</div>';
+        return;
+    }
+
+    var html = '';
+    keys.forEach(function(key) {
+        var order = allOrders[key];
+        if (!order) return;
+
+        var ident = '';
+        if (order.meja) ident += '🍽️ ' + order.meja;
+        if (order.nama) ident += (ident ? ' | ' : '') + '🛍️ ' + order.nama;
+        if (!ident) ident = '-';
+
+        html += '<div class="order-card">';
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">';
+        html += '<div><strong style="font-size:1rem;">' + fmtRp(order.total || 0) + '</strong>';
+        html += '<div style="font-size:.78rem;color:#888;">' + ident + '</div></div>';
+        html += '<div style="text-align:right;"><div style="font-size:.75rem;color:#aaa;">' + fmtDate(order.timestamp) + '</div>';
+        html += '<button style="margin-top:4px;font-size:.7rem;color:var(--primary);background:none;border:none;cursor:pointer;font-family:Inter,sans-serif;font-weight:600;" data-receipt-key="' + key + '"><i class="fa-solid fa-receipt"></i> Struk</button></div>';
+        html += '</div>';
+
+        if (order.items && order.items.length > 0) {
+            html += '<div style="font-size:.82rem;color:#666;">';
+            order.items.forEach(function(item) {
+                var statusIcon = item.status === 'away' ? '🛍️' : '🍽️';
+                html += '<div style="padding:2px 0;">' + statusIcon + ' ' + item.name + (item.variant ? ' (' + item.variant + ')' : '') + ' x' + item.qty + (item.note ? ' <i style="color:#aaa;">(' + item.note + ')</i>' : '') + '</div>';
             });
-        });
-
-        /* ==============================================
-           SCHEDULE EDITOR
-        ============================================== */
-        function renderScheduleUI(data){
-            var c = document.getElementById('schedContainer');c.innerHTML='';
-            var todayIdx = new Date().getDay();
-            for(var i=0;i<7;i++){
-                var conf=data[i]||{isOpen:false,open:'',close:''};
-                var isToday=(i===todayIdx);var isOpen=!!conf.isOpen;
-                var row=document.createElement('div');
-                row.className='sched-row'+(isToday?' is-today':'')+(!isOpen?' is-closed-row':'');
-                row.innerHTML='<div class="sched-day">'+DAYS[i]+'<span class="today-badge">HARI INI</span></div>'+
-                    '<div class="sched-times '+(isOpen?'':'tg-off')+'" id="tg'+i+'"><input type="time" id="o'+i+'" value="'+(conf.open||'06:00')+'" '+(isOpen?'':'disabled')+'><span class="time-dash">\u2013</span><input type="time" id="c'+i+'" value="'+(conf.close||'12:00')+'" '+(isOpen?'':'disabled')+'></div>'+
-                    '<div class="sched-closed-text '+(isOpen?'':'show')+'" id="cl'+i+'">Tutup</div>'+
-                    '<div class="sched-sw"><label class="switch"><input type="checkbox" id="sw'+i+'" '+(isOpen?'checked':'')+'><span class="slider"></span></label><span class="sw-label" id="sl'+i+'">'+(isOpen?'Buka':'Tutup')+'</span></div>';
-                c.appendChild(row);
+            if (order.takeawayFee && order.takeawayFee > 0) {
+                html += '<div style="padding:2px 0;color:var(--danger);font-weight:600;">Biaya Takeaway: ' + fmtRp(order.takeawayFee) + '</div>';
             }
-            c.onclick = function(e){
-                var sw=e.target.closest('input[type="checkbox"]');if(!sw) return;
-                var id=sw.id;if(id.indexOf('sw')!==0) return;
-                var idx=parseInt(id.substring(2));if(isNaN(idx)) return;
-                var on=sw.checked;
-                var tg=document.getElementById('tg'+idx),cl=document.getElementById('cl'+idx),sl=document.getElementById('sl'+idx);
-                var oi=document.getElementById('o'+idx),ci=document.getElementById('c'+idx);
-                var row=sw.closest('.sched-row');
-                if(on){tg.classList.remove('tg-off');cl.classList.remove('show');sl.textContent='Buka';oi.disabled=false;ci.disabled=false;if(!oi.value)oi.value='06:00';if(!ci.value)ci.value='12:00';row.classList.remove('is-closed-row');}
-                else{tg.classList.add('tg-off');cl.classList.add('show');sl.textContent='Tutup';oi.disabled=true;ci.disabled=true;row.classList.add('is-closed-row');}
-            };
+            html += '</div>';
         }
 
-        document.getElementById('btnSaveSched').addEventListener('click',function(){
-            if(!db){showToast('Firebase belum terhubung!',true);return;}
-            var ns={};
-            for(var i=0;i<7;i++){
-                var sw=document.getElementById('sw'+i),oi=document.getElementById('o'+i),ci=document.getElementById('c'+i);
-                if(!sw||!oi||!ci){ns[i]={isOpen:false,open:'',close:''};continue;}
-                if(sw.checked) ns[i]={isOpen:true,open:oi.value||'06:00',close:ci.value||'12:00'};
-                else ns[i]={isOpen:false,open:'',close:''};
-            }
-            db.ref('bubur_grace/config').set({schedule:ns},function(err){
-                if(err) showToast('Gagal menyimpan!',true);
-                else showToast('Jadwal disimpan! Status toko ikut berubah otomatis.');
-            });
+        html += '</div>';
+    });
+
+    container.innerHTML = html;
+
+    /* Bind receipt buttons */
+    container.querySelectorAll('button[data-receipt-key]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var key = this.getAttribute('data-receipt-key');
+            showReceipt(allOrders[key]);
         });
+    });
+}
 
-        /* ==============================================
-           DASHBOARD STATS
-        ============================================== */
-        function refreshActivity(){
-            var el=document.getElementById('recentActivityList');el.innerHTML='';
-            if(!allOrders||!Object.keys(allOrders).length){el.innerHTML='<div class="activity-item">Belum ada aktivitas hari ini.</div>';return;}
-            var start=new Date();start.setHours(0,0,0,0);var startTs=start.getTime();var arr=[];
-            var keys=Object.keys(allOrders);
-            for(var k=0;k<keys.length;k++){var o=allOrders[keys[k]];if(o.timestamp&&o.timestamp>=startTs)arr.push(o);}
-            arr.sort(function(a,b){return b.timestamp-a.timestamp;});arr=arr.slice(0,5);
-            if(!arr.length){el.innerHTML='<div class="activity-item">Belum ada aktivitas hari ini.</div>';return;}
-            for(var i=0;i<arr.length;i++){
-                var o=arr[i];var div=document.createElement('div');div.className='activity-item';
-                var t=new Date(o.timestamp).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
-                div.innerHTML='<strong>'+t+'</strong> \u2014 '+o.customerInfo+' <span style="color:var(--primary);font-weight:600;">('+fmtRp(o.total)+')</span>';
-                el.appendChild(div);
-            }
-        }
+/* ============================================
+   SHOW RECEIPT
+============================================ */
+function showReceipt(order) {
+    if (!order) return;
+    var body = document.getElementById('receiptBody');
+    var html = '';
 
-        function refreshTopMenu(){
-            if(!allOrders) return;
-            var start=new Date();start.setHours(0,0,0,0);var startTs=start.getTime();var counts={};
-            var keys=Object.keys(allOrders);
-            for(var k=0;k<keys.length;k++){var o=allOrders[keys[k]];if(o.timestamp&&o.timestamp>=startTs&&o.items){for(var j=0;j<o.items.length;j++){var n=o.items[j].name.split('(')[0].trim();counts[n]=(counts[n]||0)+o.items[j].qty;}}}
-            var top='-',tc=0;for(var n in counts){if(counts[n]>tc){tc=counts[n];top=n;}}
-            document.getElementById('statTop').innerText=top!=='-'?top+' ('+tc+')':'-';
-        }
+    if (order.meja) html += '<div style="margin-bottom:5px;">Meja: <strong>' + order.meja + '</strong></div>';
+    if (order.nama) html += '<div style="margin-bottom:5px;">Nama: <strong>' + order.nama + '</strong></div>';
+    html += '<div style="margin-bottom:10px;font-size:.75rem;">' + fmtDate(order.timestamp) + '</div>';
+    html += '<div style="border-top:1px dashed #000;padding-top:8px;">';
 
-        document.getElementById('btnResetStats').addEventListener('click',function(){
-            if(!confirm('Reset Omset ke Rp 0 DAN hapus pesanan hari ini?')) return;
-            if(!db){showToast('Firebase belum terhubung!',true);return;}
-            var start=new Date();start.setHours(0,0,0,0);var startTs=start.getTime();
-            db.ref('bubur_grace/daily_stats').set({total:0,count:0});
-            db.ref('bubur_grace/orders').orderByChild('timestamp').startAt(startTs).once('value',function(s){
-                var u={};s.forEach(function(c){u[c.key]=null;});
-                if(Object.keys(u).length>0){db.ref('bubur_grace/orders').update(u).then(function(){showToast('Berhasil di-reset');}).catch(function(){showToast('Gagal',true);});}
-                else showToast('Berhasil di-reset');
-            });
+    if (order.items) {
+        order.items.forEach(function(item) {
+            var sub = (item.price || 0) * (item.qty || 1);
+            var statusLabel = item.status === 'away' ? ' [Bawa Pulang]' : ' [Dine In]';
+            html += '<div style="margin-bottom:4px;">' + item.name + (item.variant ? ' (' + item.variant + ')' : '') + statusLabel + '</div>';
+            html += '<div style="display:flex;justify-content:space-between;font-size:.8rem;"><span>&nbsp;&nbsp;x' + item.qty + '</span><span>' + fmtRp(sub) + '</span></div>';
+            if (item.note) html += '<div style="font-size:.75rem;color:#888;font-style:italic;">Catatan: ' + item.note + '</div>';
         });
+    }
 
-        /* ==============================================
-           STOCK
-        ============================================== */
-        function renderAllStock(){
-            renderStockGroup('dailyStockList',menuItems.filter(function(m){return !m.isWeekend;}),stockData,'daily');
-            renderStockGroup('weekendStockList',menuItems.filter(function(m){return m.isWeekend;}),weekendStockData,'weekend');
+    html += '</div>';
+    html += '<div style="border-top:1px dashed #000;padding-top:8px;margin-top:8px;">';
+    html += '<div style="display:flex;justify-content:space-between;"><span>Subtotal</span><span>' + fmtRp(order.subtotal || 0) + '</span></div>';
+    if (order.takeawayFee && order.takeawayFee > 0) {
+        html += '<div style="display:flex;justify-content:space-between;color:#c00;"><span>Takeaway Fee</span><span>' + fmtRp(order.takeawayFee) + '</span></div>';
+    }
+    html += '<div style="display:flex;justify-content:space-between;font-weight:bold;font-size:1.1rem;margin-top:5px;"><span>TOTAL</span><span>' + fmtRp(order.total || 0) + '</span></div>';
+    html += '</div>';
+
+    body.innerHTML = html;
+    document.getElementById('receiptModal').style.display = 'flex';
+}
+
+document.getElementById('btnCloseReceipt').addEventListener('click', function() {
+    document.getElementById('receiptModal').style.display = 'none';
+});
+document.getElementById('receiptModal').addEventListener('click', function(e) {
+    if (e.target === this) this.style.display = 'none';
+});
+
+/* ============================================
+   RESET STATS
+============================================ */
+document.getElementById('btnResetStats').addEventListener('click', function() {
+    if (!confirm('Reset omset hari ini & hapus semua riwayat pesanan?')) return;
+    var today = new Date().toISOString().slice(0, 10);
+    db.ref('bubur_grace/daily_stats/' + today).remove();
+    db.ref('bubur_grace/orders').remove();
+    showToast('Data berhasil direset!');
+});
+
+/* ============================================
+   EXPORT CSV
+============================================ */
+document.getElementById('btnExport').addEventListener('click', function() {
+    var keys = Object.keys(allOrders).sort(function(a, b) { return b - a; });
+    if (keys.length === 0) { showToast('Tidak ada data untuk diexport', true); return; }
+
+    var csv = 'Waktu,Meja,Nama,Items,Subtotal,Takeaway Fee,Total\n';
+    keys.forEach(function(key) {
+        var o = allOrders[key];
+        if (!o) return;
+        var itemsStr = '';
+        if (o.items) {
+            itemsStr = o.items.map(function(it) {
+                return it.name + (it.variant ? '(' + it.variant + ')' : '') + 'x' + it.qty + '(' + (it.status || 'dine') + ')';
+            }).join('; ');
         }
+        var row = [
+            fmtDate(o.timestamp),
+            '"' + (o.meja || '') + '"',
+            '"' + (o.nama || '') + '"',
+            '"' + itemsStr + '"',
+            o.subtotal || 0,
+            o.takeawayFee || 0,
+            o.total || 0
+        ];
+        csv += row.join(',') + '\n';
+    });
 
-        function renderStockGroup(cid,items,data,type){
-            var c=document.getElementById(cid);c.innerHTML='';var grp={};
-            for(var i=0;i<items.length;i++){var cat=items[i].category;if(!grp[cat])grp[cat]=[];grp[cat].push(items[i]);}
-            for(var cat in grp){
-                var gd=document.createElement('div');gd.className='stock-category-group';
-                var lb=document.createElement('div');lb.className='category-label';lb.textContent=cat;gd.appendChild(lb);
-                var arr=grp[cat];
-                for(var j=0;j<arr.length;j++){
-                    var item=arr[j];var raw=data[item.name];var limited=(raw!==undefined&&raw!==null&&raw!=='');var num=limited?(parseInt(raw)||0):0;
-                    var div=document.createElement('div');div.className='stock-item';div.setAttribute('data-name',item.name.toLowerCase());
-                    div.innerHTML='<div class="item-info"><h4>'+item.name+'</h4></div><div class="stock-control-wrapper"><input type="number" class="stock-input" data-menu="'+item.name+'" data-type="'+type+'" value="'+(limited?num:'')+'" placeholder="\u221E" min="0">'+(limited?'':'<span class="unlimited-badge">Unlimited</span>')+'</div>';
-                    gd.appendChild(div);
-                }
-                c.appendChild(gd);
-            }
-        }
-
-        document.addEventListener('change',function(e){
-            if(!e.target.classList.contains('stock-input'))return;
-            if(!db){showToast('Firebase belum terhubung!',true);e.target.value='';return;}
-            var inp=e.target;var name=inp.getAttribute('data-menu');var type=inp.getAttribute('data-type');var val=inp.value.trim();
-            var ref=type==='weekend'?'bubur_grace/weekendStock':'bubur_grace/stock';var key=name.replace(/\//g,'_').replace(/\./g,'_');
-            if(val===''){db.ref(ref+'/'+key).remove();inp.value='';var wr=inp.parentElement;var ex=wr.querySelector('.unlimited-badge');if(!ex){var b=document.createElement('span');b.className='unlimited-badge';b.textContent='Unlimited';wr.appendChild(b);}showToast(name+' \u2192 Unlimited');}
-            else{var n=Math.max(0,parseInt(val)||0);inp.value=n;db.ref(ref+'/'+key).set(n);var wr2=inp.parentElement;var ex2=wr2.querySelector('.unlimited-badge');if(ex2)ex2.remove();showToast(name+' \u2192 Stok '+n);}
-        });
-
-        document.getElementById('dailySearch').addEventListener('input',function(){filterStock('daily');});
-        document.getElementById('weekendSearch').addEventListener('input',function(){filterStock('weekend');});
-        function filterStock(type){
-            var q=document.getElementById(type+'Search').value.toLowerCase().trim();var c=document.getElementById(type+'StockList');var gs=c.querySelectorAll('.stock-category-group');
-            for(var g=0;g<gs.length;g++){var items=gs[g].querySelectorAll('.stock-item');var vis=false;for(var i=0;i<items.length;i++){var n=items[i].getAttribute('data-name')||'';var m=!q||n.indexOf(q)!==-1;items[i].style.display=m?'':'none';if(m)vis=true;}gs[g].style.display=vis?'':'none';}
-        }
-
-        /* ==============================================
-           HISTORY
-        ============================================== */
-        function renderHistory(){
-            var c=document.getElementById('ordersList');c.innerHTML='';
-            if(!allOrders||!Object.keys(allOrders).length){c.innerHTML='<div style="text-align:center;padding:30px;color:#999;">Belum ada pesanan.</div>';return;}
-            var keys=Object.keys(allOrders).reverse();
-            for(var k=0;k<keys.length;k++){
-                var key=keys[k];var o=allOrders[key];var d=new Date(o.timestamp);var ts=d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});var ds=d.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});
-                var sb='',ab='';
-                if(o.status==='waiting_payment'){sb='<span style="color:#F59E0B;font-weight:bold;font-size:0.8rem;background:#FEF3C7;padding:2px 8px;border-radius:4px;">Menunggu Bayar</span>';ab='<button class="btn-complete" data-act="accept" data-key="'+key+'"><i class="fa-solid fa-check"></i> Terima</button>';}
-                else if(o.status==='paid'){sb='<span style="color:var(--success);font-weight:bold;font-size:0.8rem;background:#ECFDF5;padding:2px 8px;border-radius:4px;">LUNAS</span>';ab='<button class="btn-complete" data-act="done" data-key="'+key+'"><i class="fa-solid fa-check-double"></i> Selesai</button>';}
-                else{sb='<span style="color:var(--primary);font-weight:bold;font-size:0.8rem;background:#FFF7ED;padding:2px 8px;border-radius:4px;">COD/WA</span>';ab='<button class="btn-complete" data-act="receipt" data-key="'+key+'" style="background:var(--secondary);"><i class="fa-solid fa-print"></i> Struk</button><button class="btn-complete" data-act="done" data-key="'+key+'"><i class="fa-solid fa-check"></i> Selesai</button>';}
-                var ih='';if(o.items)for(var j=0;j<o.items.length;j++){var it=o.items[j];ih+='<div style="font-size:0.85rem;color:#555;">- '+it.name+' ('+it.qty+'x)'+(it.notes?' <small style="color:#D35400;">*'+it.notes+'</small>':'')+'</div>';}
-                var card=document.createElement('div');card.className='order-card';
-                card.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;border-bottom:1px dashed #eee;padding-bottom:10px;flex-wrap:wrap;gap:5px;"><div><strong style="font-size:0.95rem;">'+o.customerInfo+'</strong><div style="font-size:0.78rem;color:#999;">'+ds+' \u00b7 '+ts+'</div></div><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">'+sb+'<strong style="font-size:1rem;color:var(--primary);">'+fmtRp(o.total)+'</strong></div></div>'+ih+(o.customerNote?'<div style="font-size:0.8rem;color:#888;margin-top:6px;"><i class="fa-solid fa-note-sticky" style="margin-right:4px;"></i>'+o.customerNote+'</div>':'')+'<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">'+ab+'</div>';
-                c.appendChild(card);
-            }
-        }
-
-        document.getElementById('ordersList').addEventListener('click',function(e){
-            var b=e.target.closest('[data-act]');if(!b||!db) return;
-            var act=b.getAttribute('data-act'),key=b.getAttribute('data-key');
-            if(act==='accept'){db.ref('bubur_grace/orders/'+key+'/status').set('paid');showToast('Diterima');}
-            else if(act==='done'){db.ref('bubur_grace/orders/'+key+'/status').set('completed');showToast('Selesai');}
-            else if(act==='receipt') viewReceipt(key);
-        });
-
-        function viewReceipt(key){
-            var o=allOrders[key];if(!o) return;var b='';
-            if(o.items)for(var i=0;i<o.items.length;i++){var it=o.items[i];b+='<div class="receipt-row"><span>'+it.name+' ('+it.qty+'x)</span><span>'+fmtRp(it.price*it.qty)+'</span></div>';}
-            b+='<div class="receipt-row" style="border-top:1px dashed #000;padding-top:5px;margin-top:5px;font-weight:bold;"><span>TOTAL</span><span>'+fmtRp(o.total)+'</span></div>';
-            b+='<div style="margin-top:10px;font-size:0.8rem;">Nama: '+o.customerInfo+'</div>';
-            if(o.customerNote) b+='<div style="font-size:0.8rem;">Catatan: '+o.customerNote+'</div>';
-            b+='<div style="margin-top:5px;font-size:0.8rem;">'+new Date(o.timestamp).toLocaleString('id-ID')+'</div>';
-            document.getElementById('receiptBody').innerHTML=b;document.getElementById('receiptModal').style.display='flex';
-        }
-        document.getElementById('receiptModal').addEventListener('click',function(e){if(e.target===this)this.style.display='none';});
-        document.getElementById('btnCloseReceipt').addEventListener('click',function(){document.getElementById('receiptModal').style.display='none';});
-
-        document.getElementById('btnExport').addEventListener('click',function(){
-            if(!allOrders||!Object.keys(allOrders).length){showToast('Tidak ada data',true);return;}
-            var csv='Tanggal,Waktu,Nama,Item,Total,Status\n';var keys=Object.keys(allOrders);
-            for(var k=0;k<keys.length;k++){var o=allOrders[keys[k]];var d=new Date(o.timestamp);var its='';
-                if(o.items){var p=[];for(var j=0;j<o.items.length;j++)p.push(o.items[j].name+'('+o.items[j].qty+')');its=p.join('; ');}
-                csv+='"'+d.toLocaleDateString('id-ID')+'","'+d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})+'","'+o.customerInfo+'","'+its+'","'+o.total+'","'+(o.status||'-')+'"\n';
-            }
-            var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download='laporan_'+new Date().toISOString().split('T')[0]+'.csv';a.click();URL.revokeObjectURL(url);showToast('Laporan didownload!');
-        });
-
-        document.getElementById('btnLogout').addEventListener('click',logout);
-
-        function fmtRp(n){return 'Rp '+(n||0).toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.');}
-        function showToast(msg,err){var t=document.getElementById('toast');t.textContent=msg;t.style.backgroundColor=err?'#EF4444':'#333';t.className='show';clearTimeout(t._to);t._to=setTimeout(function(){t.className='';},2500);}
-    </script>
+    var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'bubur_grace_orders_' + new Date().toISOString().slice(0, 10) + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('CSV berhasil didownload!');
+});
+</script>
 </body>
 </html>
