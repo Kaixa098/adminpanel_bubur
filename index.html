@@ -189,6 +189,9 @@
             .sched-day{width:56px;font-size:.78rem}
             .sw-label{display:none}
             .cat-switch-grid{grid-template-columns:1fr}
+            /* === FIX: Toggle ON/OFF tidak terpotong di HP === */
+            .sched-row{flex-wrap:wrap}
+            .sched-sw{width:100%;justify-content:flex-end;padding-top:6px}
         }
     </style>
 </head>
@@ -770,53 +773,205 @@ function renderCategorySwitches() {
 }
 
 /* ============================================
+   RENDER: SCHEDULE UI
+============================================ */
+function renderScheduleUI(data) {
+    if (!data) return;
+    var container = document.getElementById('schedContainer');
+    var todayIdx = new Date().getDay();
+    var html = '';
+    for (var i = 0; i < 7; i++) {
+        var d = data[i] || { isOpen: false, open: '', close: '' };
+        var isToday = (i === todayIdx);
+        var rowClass = 'sched-row';
+        if (isToday) rowClass += ' is-today';
+        if (!d.isOpen) rowClass += ' is-closed-row';
+
+        html += '<div class="' + rowClass + '">';
+        html += '<div class="sched-day">' + DAYS[i] + '<span class="today-badge">HARI INI</span></div>';
+        html += '<div class="sched-times' + (d.isOpen ? '' : ' tg-off') + '">';
+        html += '<input type="time" class="sched-open" value="' + (d.open || '') + '" ' + (d.isOpen ? '' : 'disabled') + ' data-day="' + i + '">';
+        html += '<span class="time-dash">—</span>';
+        html += '<input type="time" class="sched-close" value="' + (d.close || '') + '" ' + (d.isOpen ? '' : 'disabled') + ' data-day="' + i + '">';
+        html += '</div>';
+        html += '<div class="sched-closed-text' + (d.isOpen ? '' : ' show') + '">Tutup</div>';
+        html += '<div class="sched-sw">';
+        html += '<label class="switch"><input type="checkbox" class="sched-toggle" ' + (d.isOpen ? 'checked' : '') + ' data-day="' + i + '"><span class="slider"></span></label>';
+        html += '<span class="sw-label">' + (d.isOpen ? 'ON' : 'OFF') + '</span>';
+        html += '</div>';
+        html += '</div>';
+    }
+    container.innerHTML = html;
+
+    container.querySelectorAll('.sched-toggle').forEach(function(toggle) {
+        toggle.addEventListener('change', function() {
+            var dayIdx = parseInt(this.getAttribute('data-day'));
+            var row = this.closest('.sched-row');
+            var timesDiv = row.querySelector('.sched-times');
+            var closedText = row.querySelector('.sched-closed-text');
+            var swLabel = row.querySelector('.sw-label');
+            if (this.checked) {
+                timesDiv.classList.remove('tg-off');
+                timesDiv.querySelectorAll('input[type="time"]').forEach(function(inp) { inp.disabled = false; });
+                closedText.classList.remove('show');
+                row.classList.remove('is-closed-row');
+                if (swLabel) swLabel.textContent = 'ON';
+            } else {
+                timesDiv.classList.add('tg-off');
+                timesDiv.querySelectorAll('input[type="time"]').forEach(function(inp) { inp.disabled = true; });
+                closedText.classList.add('show');
+                row.classList.add('is-closed-row');
+                if (swLabel) swLabel.textContent = 'OFF';
+            }
+        });
+    });
+}
+
+/* ============================================
+   SAVE SCHEDULE
+============================================ */
+document.getElementById('btnSaveSched').addEventListener('click', function() {
+    if (!db || !scheduleData) return;
+    var container = document.getElementById('schedContainer');
+    var newSched = {};
+    for (var i = 0; i < 7; i++) {
+        var row = container.querySelectorAll('.sched-row')[i];
+        var toggle = row.querySelector('.sched-toggle');
+        var openInput = row.querySelector('.sched-open');
+        var closeInput = row.querySelector('.sched-close');
+        newSched[i] = {
+            isOpen: toggle.checked,
+            open: openInput.value,
+            close: closeInput.value
+        };
+    }
+    db.ref('bubur_grace/config/schedule').set(newSched).then(function() {
+        showToast('Jadwal berhasil disimpan!');
+    }).catch(function(err) {
+        showToast('Gagal menyimpan: ' + err.message);
+    });
+});
+
+/* ============================================
+   STATUS TICK
+============================================ */
+function tickStatus() {
+    if (!scheduleData) return;
+    var now = new Date();
+    var dayIdx = now.getDay();
+    var minutes = now.getHours() * 60 + now.getMinutes();
+    var sched = scheduleData[dayIdx] || { isOpen: false, open: '', close: '' };
+
+    var status, detail;
+    if (storeMode === 'open') {
+        status = 'open'; detail = 'Mode darurat: DIPAKSA BUKA';
+    } else if (storeMode === 'close') {
+        status = 'closed'; detail = 'Mode darurat: DIPAKSA TUTUP';
+    } else {
+        if (!sched.isOpen) {
+            status = 'closed'; detail = DAYS[dayIdx] + ' — Jadwal: Tutup';
+        } else {
+            var oT = parseTime(sched.open), cT = parseTime(sched.close);
+            if (oT === null || cT === null) {
+                status = 'closed'; detail = DAYS[dayIdx] + ' — Jam belum diatur';
+            } else if (minutes < oT) {
+                status = 'waiting'; detail = DAYS[dayIdx] + ' — Buka pukul ' + sched.open;
+            } else if (minutes >= oT && minutes < cT) {
+                status = 'open'; detail = DAYS[dayIdx] + ' — ' + sched.open + ' s/d ' + sched.close;
+            } else {
+                status = 'closed'; detail = DAYS[dayIdx] + ' — Sudah tutup sejak ' + sched.close;
+            }
+        }
+    }
+
+    var card = document.getElementById('liveCard');
+    card.className = 'live-card card-' + status;
+
+    var iconBox = document.getElementById('liveIcon');
+    iconBox.className = 'live-icon-box ic-' + status;
+    iconBox.innerHTML = status === 'open' ? '<i class="fa-solid fa-store"></i>' : status === 'waiting' ? '<i class="fa-solid fa-hourglass-half"></i>' : '<i class="fa-solid fa-store-slash"></i>';
+
+    var statusText = document.getElementById('liveStatusText');
+    statusText.className = 'live-status s-' + status;
+    statusText.textContent = status === 'open' ? 'BUKA' : status === 'waiting' ? 'MENUNGGU JAM BUKA' : 'TUTUP';
+
+    var dot = document.getElementById('liveDot');
+    dot.className = 'live-dot d-' + status;
+
+    document.getElementById('liveDetailText').textContent = detail;
+}
+
+setInterval(function() {
+    var now = new Date();
+    document.getElementById('liveClock').textContent = now.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    tickStatus();
+}, 1000);
+
+/* ============================================
+   OVERRIDE MODE UI
+============================================ */
+function refreshModeUI() {
+    document.querySelectorAll('.mode-opt').forEach(function(opt) {
+        var m = opt.getAttribute('data-mode');
+        opt.className = 'mode-opt' + (m === storeMode ? ' sel-' + m : '');
+    });
+}
+
+document.querySelectorAll('.mode-opt').forEach(function(opt) {
+    opt.addEventListener('click', function() {
+        if (!db) return;
+        var mode = this.getAttribute('data-mode');
+        db.ref('bubur_grace/status').set(mode).then(function() {
+            showToast('Mode diubah: ' + (mode === 'auto' ? 'Otomatis' : mode === 'open' ? 'Paksa Buka' : 'Paksa Tutup'));
+        });
+    });
+});
+
+/* ============================================
    RENDER: DAILY STOCK
 ============================================ */
 function renderDailyStock() {
     var container = document.getElementById('dailyStockList');
-    if (!container) return;
-    var search = (document.getElementById('dailySearch').value || '').toLowerCase().trim();
-    var html = '';
-    var lastCat = '';
-
-    menuItems.forEach(function(item) {
-        if (item.isWeekend) return;
-        if (search && item.name.toLowerCase().indexOf(search) === -1) return;
-
-        if (item.category !== lastCat) {
-            lastCat = item.category;
-            html += '<div class="category-label">' + lastCat + '</div>';
-        }
-
-        var isOn = stockData[item.name] !== false;
-        var catOff = false;
-        CAT_SWITCH_CONFIG.forEach(function(cfg) {
-            if (cfg.tab === 'daily' && cfg.categories.indexOf(item.category) !== -1 && !categorySwitches[cfg.key]) {
-                catOff = true;
-            }
-        });
-
-        var disabledClass = catOff ? ' is-disabled' : '';
-        var offClass = (!isOn && !catOff) ? ' is-off' : '';
-        var tagHtml = '';
-        if (catOff) tagHtml = '<span class="disabled-tag">Kategori OFF</span>';
-        else if (!isOn) tagHtml = '<span class="off-tag">Habis</span>';
-
-        html += '<div class="stock-item' + offClass + disabledClass + '">';
-        html += '<div class="item-info"><h4>' + item.name + '</h4>' + tagHtml + '</div>';
-        html += '<label class="switch"><input type="checkbox" ' + (isOn ? 'checked' : '') + ' ' + (catOff ? 'disabled' : '') + ' data-stock-name="' + item.name + '" data-stock-type="daily"><span class="slider"></span></label>';
-        html += '</div>';
+    var searchVal = (document.getElementById('dailySearch').value || '').toLowerCase();
+    var groups = {};
+    menuItems.filter(function(m) { return !m.isWeekend; }).forEach(function(m) {
+        if (searchVal && m.name.toLowerCase().indexOf(searchVal) === -1) return;
+        if (!groups[m.category]) groups[m.category] = [];
+        groups[m.category].push(m);
     });
 
-    if (!html) html = '<div style="text-align:center;padding:30px;color:#999;">Tidak ada menu ditemukan</div>';
-    container.innerHTML = html;
+    var html = '';
+    var catOrder = ['Paket','Bubur','Topping','Mie','Kwetiau','Bihun','Baso','Sate','Bubur Manis','Dimsum','Gorengan','Jajanan','Kopi','Minuman'];
+    catOrder.forEach(function(cat) {
+        if (!groups[cat]) return;
+        html += '<div class="stock-category-group"><div class="category-label">' + cat + '</div>';
+        groups[cat].forEach(function(m) {
+            var isOn = stockData[m.name] !== false;
+            var isLocked = false;
+            CAT_SWITCH_CONFIG.forEach(function(cfg) {
+                if (cfg.tab === 'daily' && cfg.categories.indexOf(cat) !== -1 && !categorySwitches[cfg.key]) isLocked = true;
+            });
+            var cls = 'stock-item';
+            if (isLocked) cls += ' is-disabled';
+            else if (!isOn) cls += ' is-off';
+            html += '<div class="' + cls + '">';
+            html += '<div class="item-info"><h4>' + m.name + '</h4>';
+            if (isLocked) html += '<span class="disabled-tag">Kategori OFF</span>';
+            else if (!isOn) html += '<span class="off-tag">Habis</span>';
+            html += '</div>';
+            html += '<label class="switch"><input type="checkbox" ' + (isOn ? 'checked' : '') + ' ' + (isLocked ? 'disabled' : '') + ' data-stock-key="' + m.name + '" data-stock-tab="daily"><span class="slider"></span></label>';
+            html += '</div>';
+        });
+        html += '</div>';
+    });
+    container.innerHTML = html || '<div style="text-align:center;padding:30px;color:#999;">Tidak ada menu ditemukan</div>';
 
-    container.querySelectorAll('input[data-stock-type="daily"]').forEach(function(inp) {
-        inp.addEventListener('change', function() {
-            var name = this.getAttribute('data-stock-name');
-            var val = this.checked;
-            db.ref('bubur_grace/stock/' + name).set(val);
-            stockData[name] = val;
+    container.querySelectorAll('input[type="checkbox"][data-stock-tab="daily"]').forEach(function(cb) {
+        cb.addEventListener('change', function() {
+            if (this.disabled) return;
+            var key = this.getAttribute('data-stock-key');
+            stockData[key] = this.checked;
+            db.ref('bubur_grace/stock/' + key).set(this.checked);
             renderDailyStock();
         });
     });
@@ -829,44 +984,34 @@ document.getElementById('dailySearch').addEventListener('input', function() { re
 ============================================ */
 function renderWeekendStock() {
     var container = document.getElementById('weekendStockList');
-    if (!container) return;
-    var search = (document.getElementById('weekendSearch').value || '').toLowerCase().trim();
-    var html = '';
-    var lastCat = '';
+    var searchVal = (document.getElementById('weekendSearch').value || '').toLowerCase();
+    var items = menuItems.filter(function(m) { return m.isWeekend; });
+    if (searchVal) items = items.filter(function(m) { return m.name.toLowerCase().indexOf(searchVal) !== -1; });
 
-    menuItems.forEach(function(item) {
-        if (!item.isWeekend) return;
-        if (search && item.name.toLowerCase().indexOf(search) === -1) return;
-
-        if (item.category !== lastCat) {
-            lastCat = item.category;
-            html += '<div class="category-label">' + lastCat + '</div>';
-        }
-
-        var isOn = weekendStockData[item.name] !== false;
-        var catOff = !categorySwitches.nasiUduk;
-
-        var disabledClass = catOff ? ' is-disabled' : '';
-        var offClass = (!isOn && !catOff) ? ' is-off' : '';
-        var tagHtml = '';
-        if (catOff) tagHtml = '<span class="disabled-tag">Kategori OFF</span>';
-        else if (!isOn) tagHtml = '<span class="off-tag">Habis</span>';
-
-        html += '<div class="stock-item' + offClass + disabledClass + '">';
-        html += '<div class="item-info"><h4>' + item.name + '</h4>' + tagHtml + '</div>';
-        html += '<label class="switch"><input type="checkbox" ' + (isOn ? 'checked' : '') + ' ' + (catOff ? 'disabled' : '') + ' data-stock-name="' + item.name + '" data-stock-type="weekend"><span class="slider"></span></label>';
+    var html = '<div class="stock-category-group"><div class="category-label">Nasi Uduk</div>';
+    items.forEach(function(m) {
+        var isOn = weekendStockData[m.name] !== false;
+        var isLocked = !categorySwitches['nasiUduk'];
+        var cls = 'stock-item';
+        if (isLocked) cls += ' is-disabled';
+        else if (!isOn) cls += ' is-off';
+        html += '<div class="' + cls + '">';
+        html += '<div class="item-info"><h4>' + m.name + '</h4>';
+        if (isLocked) html += '<span class="disabled-tag">Kategori OFF</span>';
+        else if (!isOn) html += '<span class="off-tag">Habis</span>';
+        html += '</div>';
+        html += '<label class="switch"><input type="checkbox" ' + (isOn ? 'checked' : '') + ' ' + (isLocked ? 'disabled' : '') + ' data-stock-key="' + m.name + '" data-stock-tab="weekend"><span class="slider"></span></label>';
         html += '</div>';
     });
+    html += '</div>';
+    container.innerHTML = html || '<div style="text-align:center;padding:30px;color:#999;">Tidak ada menu ditemukan</div>';
 
-    if (!html) html = '<div style="text-align:center;padding:30px;color:#999;">Tidak ada menu ditemukan</div>';
-    container.innerHTML = html;
-
-    container.querySelectorAll('input[data-stock-type="weekend"]').forEach(function(inp) {
-        inp.addEventListener('change', function() {
-            var name = this.getAttribute('data-stock-name');
-            var val = this.checked;
-            db.ref('bubur_grace/weekendStock/' + name).set(val);
-            weekendStockData[name] = val;
+    container.querySelectorAll('input[type="checkbox"][data-stock-tab="weekend"]').forEach(function(cb) {
+        cb.addEventListener('change', function() {
+            if (this.disabled) return;
+            var key = this.getAttribute('data-stock-key');
+            weekendStockData[key] = this.checked;
+            db.ref('bubur_grace/weekendStock/' + key).set(this.checked);
             renderWeekendStock();
         });
     });
@@ -875,241 +1020,48 @@ function renderWeekendStock() {
 document.getElementById('weekendSearch').addEventListener('input', function() { renderWeekendStock(); });
 
 /* ============================================
-   RENDER: SCHEDULE UI
-============================================ */
-function renderScheduleUI(sched) {
-    if (!sched) return;
-    var today = new Date().getDay();
-    var html = '';
-
-    for (var i = 0; i < 7; i++) {
-        var s = sched[i] || { isOpen: false, open: '', close: '' };
-        var isToday = (i === today);
-        var rowClass = 'sched-row';
-        if (isToday) rowClass += ' is-today';
-        if (!s.isOpen) rowClass += ' is-closed-row';
-
-        html += '<div class="' + rowClass + '">';
-        html += '<div class="sched-day">' + DAYS[i] + '<span class="today-badge">HARI INI</span></div>';
-
-        if (s.isOpen) {
-            html += '<div class="sched-times" id="schedTimes_' + i + '">';
-            html += '<input type="time" value="' + (s.open || '') + '" id="schedOpen_' + i + '">';
-            html += '<span class="time-dash">—</span>';
-            html += '<input type="time" value="' + (s.close || '') + '" id="schedClose_' + i + '">';
-            html += '</div>';
-            html += '<div class="sched-closed-text" id="schedClosedText_' + i + '">Tutup</div>';
-        } else {
-            html += '<div class="sched-times tg-off" id="schedTimes_' + i + '">';
-            html += '<input type="time" value="' + (s.open || '') + '" id="schedOpen_' + i + '" disabled>';
-            html += '<span class="time-dash">—</span>';
-            html += '<input type="time" value="' + (s.close || '') + '" id="schedClose_' + i + '" disabled>';
-            html += '</div>';
-            html += '<div class="sched-closed-text show" id="schedClosedText_' + i + '">Tutup</div>';
-        }
-
-        html += '<div class="sched-sw">';
-        html += '<span class="sw-label">' + (s.isOpen ? 'ON' : 'OFF') + '</span>';
-        html += '<label class="switch"><input type="checkbox" ' + (s.isOpen ? 'checked' : '') + ' data-sched-day="' + i + '"><span class="slider"></span></label>';
-        html += '</div>';
-        html += '</div>';
-    }
-
-    document.getElementById('schedContainer').innerHTML = html;
-
-    /* Bind toggle per hari */
-    document.querySelectorAll('input[data-sched-day]').forEach(function(sw) {
-        sw.addEventListener('change', function() {
-            var day = parseInt(this.getAttribute('data-sched-day'));
-            var isOn = this.checked;
-            var timesDiv = document.getElementById('schedTimes_' + day);
-            var closedText = document.getElementById('schedClosedText_' + day);
-            var openInput = document.getElementById('schedOpen_' + day);
-            var closeInput = document.getElementById('schedClose_' + day);
-
-            if (isOn) {
-                timesDiv.classList.remove('tg-off');
-                openInput.disabled = false;
-                closeInput.disabled = false;
-                closedText.classList.remove('show');
-            } else {
-                timesDiv.classList.add('tg-off');
-                openInput.disabled = true;
-                closeInput.disabled = true;
-                closedText.classList.add('show');
-            }
-
-            /* Update sw-label text */
-            var label = this.closest('.sched-sw').querySelector('.sw-label');
-            label.textContent = isOn ? 'ON' : 'OFF';
-        });
-    });
-}
-
-/* Save schedule */
-document.getElementById('btnSaveSched').addEventListener('click', function() {
-    var newSched = {};
-    for (var i = 0; i < 7; i++) {
-        var sw = document.querySelector('input[data-sched-day="' + i + '"]');
-        var openVal = document.getElementById('schedOpen_' + i).value;
-        var closeVal = document.getElementById('schedClose_' + i).value;
-        newSched[i] = {
-            isOpen: sw ? sw.checked : false,
-            open: openVal,
-            close: closeVal
-        };
-    }
-    db.ref('bubur_grace/config/schedule').set(newSched).then(function() {
-        showToast('Jadwal berhasil disimpan!');
-    }).catch(function(err) {
-        showToast('Gagal menyimpan: ' + err.message);
-    });
-});
-
-/* ============================================
-   REFRESH: MODE UI (Override)
-============================================ */
-function refreshModeUI() {
-    document.querySelectorAll('.mode-opt').forEach(function(opt) {
-        var mode = opt.getAttribute('data-mode');
-        opt.classList.remove('sel-auto', 'sel-open', 'sel-close');
-        if (mode === storeMode) opt.classList.add('sel-' + mode);
-    });
-}
-
-document.querySelectorAll('.mode-opt').forEach(function(opt) {
-    opt.addEventListener('click', function() {
-        var mode = this.getAttribute('data-mode');
-        db.ref('bubur_grace/status').set(mode);
-        storeMode = mode;
-        refreshModeUI();
-        tickStatus();
-        showToast('Mode diubah: ' + (mode === 'auto' ? 'Otomatis' : mode === 'open' ? 'Paksa Buka' : 'Paksa Tutup'));
-    });
-});
-
-/* ============================================
-   TICK STATUS (Real-time clock & status)
-============================================ */
-function tickStatus() {
-    var now = new Date();
-    var day = now.getDay();
-    var minutes = now.getHours() * 60 + now.getMinutes();
-
-    /* Clock */
-    document.getElementById('liveClock').textContent = now.toLocaleTimeString('id-ID');
-
-    var actualOpen = false;
-    var detailText = '';
-
-    if (storeMode === 'open') {
-        actualOpen = true;
-        detailText = 'Mode: PAKSA BUKA (darurat)';
-    } else if (storeMode === 'close') {
-        actualOpen = false;
-        detailText = 'Mode: PAKSA TUTUP (darurat)';
-    } else {
-        var sched = scheduleData ? (scheduleData[day] || scheduleData[String(day)]) : null;
-        if (sched && sched.isOpen) {
-            var openT = parseTime(sched.open);
-            var closeT = parseTime(sched.close);
-            if (openT !== null && closeT !== null && minutes >= openT && minutes < closeT) {
-                actualOpen = true;
-                detailText = 'Otomatis: ' + sched.open + ' - ' + sched.close + ' (Dalam jadwal)';
-            } else {
-                actualOpen = false;
-                if (minutes < openT) detailText = 'Otomatis: Belum buka (buka ' + sched.open + ')';
-                else detailText = 'Otomatis: Sudah lewat jam tutup (' + sched.close + ')';
-            }
-        } else {
-            actualOpen = false;
-            detailText = 'Otomatis: Hari ini tutup (tidak ada jadwal)';
-        }
-    }
-
-    document.getElementById('liveDetailText').textContent = detailText;
-
-    var card = document.getElementById('liveCard');
-    var icon = document.getElementById('liveIcon');
-    var statusText = document.getElementById('liveStatusText');
-    var dot = document.getElementById('liveDot');
-
-    card.classList.remove('card-open', 'card-closed', 'card-waiting');
-    icon.classList.remove('ic-open', 'ic-closed', 'ic-waiting');
-    statusText.classList.remove('s-open', 's-closed', 's-waiting');
-    dot.classList.remove('d-open', 'd-closed', 'd-waiting');
-
-    if (actualOpen) {
-        card.classList.add('card-open');
-        icon.classList.add('ic-open');
-        icon.innerHTML = '<i class="fa-solid fa-store"></i>';
-        statusText.classList.add('s-open');
-        statusText.textContent = 'BUKA';
-        dot.classList.add('d-open');
-    } else {
-        card.classList.add('card-closed');
-        icon.classList.add('ic-closed');
-        icon.innerHTML = '<i class="fa-solid fa-store-slash"></i>';
-        statusText.classList.add('s-closed');
-        statusText.textContent = 'TUTUP';
-        dot.classList.add('d-closed');
-    }
-}
-
-setInterval(tickStatus, 1000);
-
-/* ============================================
-   REFRESH: ACTIVITY & TOP MENU
+   REFRESH: ACTIVITY
 ============================================ */
 function refreshActivity() {
-    var container = document.getElementById('recentActivityList');
-    var keys = Object.keys(allOrders).sort(function(a, b) { return b - a; }).slice(0, 10);
+    var list = document.getElementById('recentActivityList');
+    var entries = [];
+    for (var k in allOrders) {
+        var o = allOrders[k];
+        if (o && o.timestamp) entries.push(o);
+    }
+    entries.sort(function(a, b) { return (b.timestamp || 0) - (a.timestamp || 0); });
+    entries = entries.slice(0, 15);
 
-    if (keys.length === 0) {
-        container.innerHTML = '<div style="text-align:center;padding:15px;color:#ccc;">Belum ada pesanan</div>';
+    if (entries.length === 0) {
+        list.innerHTML = '<div style="text-align:center;padding:20px;color:#999;font-size:.9rem;">Belum ada aktivitas</div>';
         return;
     }
-
     var html = '';
-    keys.forEach(function(key) {
-        var order = allOrders[key];
-        if (!order) return;
-        var ident = order.meja || order.nama || '-';
-        var itemCount = order.items ? order.items.length : 0;
-        var statusInfo = '';
-        if (order.items) {
-            var hasDine = false, hasAway = false;
-            order.items.forEach(function(it) { if (it.status === 'dine') hasDine = true; else hasAway = true; });
-            if (hasDine && hasAway) statusInfo = ' 🍽️🛍️';
-            else if (hasDine) statusInfo = ' 🍽️';
-            else if (hasAway) statusInfo = ' 🛍️';
-        }
-        html += '<div class="activity-item">';
-        html += '<strong>' + fmtRp(order.total || 0) + '</strong> — ' + ident + statusInfo + ' (' + itemCount + ' item) — <span style="color:#aaa;font-size:.8rem;">' + fmtDate(order.timestamp) + '</span>';
-        html += '</div>';
+    entries.forEach(function(o) {
+        var timeStr = o.timestamp ? fmtDate(o.timestamp) : '-';
+        var totalStr = o.total ? fmtRp(o.total) : '-';
+        html += '<div class="activity-item"><strong>' + timeStr + '</strong> — ' + (o.customerName || 'Pelanggan') + ' <span style="float:right;color:var(--primary);font-weight:700;">' + totalStr + '</span></div>';
     });
-
-    container.innerHTML = html;
+    list.innerHTML = html;
 }
 
+/* ============================================
+   REFRESH: TOP MENU
+============================================ */
 function refreshTopMenu() {
     var counts = {};
-    Object.keys(allOrders).forEach(function(key) {
-        var order = allOrders[key];
-        if (!order || !order.items) return;
-        order.items.forEach(function(item) {
-            var n = item.name;
-            counts[n] = (counts[n] || 0) + (item.qty || 1);
+    for (var k in allOrders) {
+        var o = allOrders[k];
+        if (!o || !o.items) continue;
+        o.items.forEach(function(it) {
+            var name = it.name || it.menu || '';
+            if (!name) return;
+            counts[name] = (counts[name] || 0) + (it.qty || 1);
         });
-    });
-
-    var topName = '-';
-    var topCount = 0;
-    for (var k in counts) {
-        if (counts[k] > topCount) { topCount = counts[k]; topName = k; }
     }
-
-    document.getElementById('statTop').textContent = topCount > 0 ? topName : '-';
+    var top = '-', topCount = 0;
+    for (var n in counts) { if (counts[n] > topCount) { topCount = counts[n]; top = n; } }
+    document.getElementById('statTop').textContent = topCount > 0 ? top + ' (' + topCount + 'x)' : '-';
 }
 
 /* ============================================
@@ -1117,148 +1069,90 @@ function refreshTopMenu() {
 ============================================ */
 function renderHistory() {
     var container = document.getElementById('ordersList');
-    var keys = Object.keys(allOrders).sort(function(a, b) { return b - a; });
+    var entries = [];
+    for (var k in allOrders) {
+        var o = allOrders[k];
+        if (o && o.timestamp) entries.push({ id: k, data: o });
+    }
+    entries.sort(function(a, b) { return (b.data.timestamp || 0) - (a.data.timestamp || 0); });
 
-    if (keys.length === 0) {
+    if (entries.length === 0) {
         container.innerHTML = '<div style="text-align:center;padding:30px;color:#999;">Belum ada riwayat pesanan</div>';
         return;
     }
-
     var html = '';
-    keys.forEach(function(key) {
-        var order = allOrders[key];
-        if (!order) return;
-
-        var ident = '';
-        if (order.meja) ident += '🍽️ ' + order.meja;
-        if (order.nama) ident += (ident ? ' | ' : '') + '🛍️ ' + order.nama;
-        if (!ident) ident = '-';
-
-        html += '<div class="order-card">';
-        html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">';
-        html += '<div><strong style="font-size:1rem;">' + fmtRp(order.total || 0) + '</strong>';
-        html += '<div style="font-size:.78rem;color:#888;">' + ident + '</div></div>';
-        html += '<div style="text-align:right;"><div style="font-size:.75rem;color:#aaa;">' + fmtDate(order.timestamp) + '</div>';
-        html += '<button style="margin-top:4px;font-size:.7rem;color:var(--primary);background:none;border:none;cursor:pointer;font-family:Inter,sans-serif;font-weight:600;" data-receipt-key="' + key + '"><i class="fa-solid fa-receipt"></i> Struk</button></div>';
-        html += '</div>';
-
-        if (order.items && order.items.length > 0) {
-            html += '<div style="font-size:.82rem;color:#666;">';
-            order.items.forEach(function(item) {
-                var statusIcon = item.status === 'away' ? '🛍️' : '🍽️';
-                html += '<div style="padding:2px 0;">' + statusIcon + ' ' + item.name + (item.variant ? ' (' + item.variant + ')' : '') + ' x' + item.qty + (item.note ? ' <i style="color:#aaa;">(' + item.note + ')</i>' : '') + '</div>';
-            });
-            if (order.takeawayFee && order.takeawayFee > 0) {
-                html += '<div style="padding:2px 0;color:var(--danger);font-weight:600;">Biaya Takeaway: ' + fmtRp(order.takeawayFee) + '</div>';
-            }
-            html += '</div>';
+    entries.forEach(function(e) {
+        var o = e.data;
+        var timeStr = o.timestamp ? fmtDate(o.timestamp) : '-';
+        var totalStr = o.total ? fmtRp(o.total) : '-';
+        var itemsStr = '';
+        if (o.items) {
+            o.items.forEach(function(it) { itemsStr += (it.name || it.menu || '?') + ' x' + (it.qty || 1) + ', '; });
+            itemsStr = itemsStr.slice(0, -2);
         }
-
+        html += '<div class="order-card">';
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><strong style="font-size:.85rem;">' + (o.customerName || 'Pelanggan') + '</strong><span style="font-size:.75rem;color:#999;">' + timeStr + '</span></div>';
+        html += '<div style="font-size:.82rem;color:#555;margin-bottom:6px;">' + (itemsStr || '-') + '</div>';
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:.75rem;color:#999;">' + (o.paymentMethod || '-') + '</span><strong style="color:var(--primary);font-size:.95rem;">' + totalStr + '</strong></div>';
         html += '</div>';
     });
-
     container.innerHTML = html;
-
-    /* Bind receipt buttons */
-    container.querySelectorAll('button[data-receipt-key]').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            var key = this.getAttribute('data-receipt-key');
-            showReceipt(allOrders[key]);
-        });
-    });
 }
-
-/* ============================================
-   SHOW RECEIPT
-============================================ */
-function showReceipt(order) {
-    if (!order) return;
-    var body = document.getElementById('receiptBody');
-    var html = '';
-
-    if (order.meja) html += '<div style="margin-bottom:5px;">Meja: <strong>' + order.meja + '</strong></div>';
-    if (order.nama) html += '<div style="margin-bottom:5px;">Nama: <strong>' + order.nama + '</strong></div>';
-    html += '<div style="margin-bottom:10px;font-size:.75rem;">' + fmtDate(order.timestamp) + '</div>';
-    html += '<div style="border-top:1px dashed #000;padding-top:8px;">';
-
-    if (order.items) {
-        order.items.forEach(function(item) {
-            var sub = (item.price || 0) * (item.qty || 1);
-            var statusLabel = item.status === 'away' ? ' [Bawa Pulang]' : ' [Dine In]';
-            html += '<div style="margin-bottom:4px;">' + item.name + (item.variant ? ' (' + item.variant + ')' : '') + statusLabel + '</div>';
-            html += '<div style="display:flex;justify-content:space-between;font-size:.8rem;"><span>&nbsp;&nbsp;x' + item.qty + '</span><span>' + fmtRp(sub) + '</span></div>';
-            if (item.note) html += '<div style="font-size:.75rem;color:#888;font-style:italic;">Catatan: ' + item.note + '</div>';
-        });
-    }
-
-    html += '</div>';
-    html += '<div style="border-top:1px dashed #000;padding-top:8px;margin-top:8px;">';
-    html += '<div style="display:flex;justify-content:space-between;"><span>Subtotal</span><span>' + fmtRp(order.subtotal || 0) + '</span></div>';
-    if (order.takeawayFee && order.takeawayFee > 0) {
-        html += '<div style="display:flex;justify-content:space-between;color:#c00;"><span>Takeaway Fee</span><span>' + fmtRp(order.takeawayFee) + '</span></div>';
-    }
-    html += '<div style="display:flex;justify-content:space-between;font-weight:bold;font-size:1.1rem;margin-top:5px;"><span>TOTAL</span><span>' + fmtRp(order.total || 0) + '</span></div>';
-    html += '</div>';
-
-    body.innerHTML = html;
-    document.getElementById('receiptModal').style.display = 'flex';
-}
-
-document.getElementById('btnCloseReceipt').addEventListener('click', function() {
-    document.getElementById('receiptModal').style.display = 'none';
-});
-document.getElementById('receiptModal').addEventListener('click', function(e) {
-    if (e.target === this) this.style.display = 'none';
-});
-
-/* ============================================
-   RESET STATS
-============================================ */
-document.getElementById('btnResetStats').addEventListener('click', function() {
-    if (!confirm('Reset omset hari ini & hapus semua riwayat pesanan?')) return;
-    var today = new Date().toISOString().slice(0, 10);
-    db.ref('bubur_grace/daily_stats/' + today).remove();
-    db.ref('bubur_grace/orders').remove();
-    showToast('Data berhasil direset!');
-});
 
 /* ============================================
    EXPORT CSV
 ============================================ */
 document.getElementById('btnExport').addEventListener('click', function() {
-    var keys = Object.keys(allOrders).sort(function(a, b) { return b - a; });
-    if (keys.length === 0) { showToast('Tidak ada data untuk diexport', true); return; }
+    var entries = [];
+    for (var k in allOrders) {
+        var o = allOrders[k];
+        if (o && o.timestamp) entries.push(o);
+    }
+    entries.sort(function(a, b) { return (a.timestamp || 0) - (b.timestamp || 0); });
+    if (entries.length === 0) { showToast('Tidak ada data untuk diexport'); return; }
 
-    var csv = 'Waktu,Meja,Nama,Items,Subtotal,Takeaway Fee,Total\n';
-    keys.forEach(function(key) {
-        var o = allOrders[key];
-        if (!o) return;
+    var csv = 'Tanggal,Waktu,Pelanggan,Menu,Total,Metode Pembayaran\n';
+    entries.forEach(function(o) {
+        var d = o.timestamp ? new Date(o.timestamp) : null;
+        var dateStr = d ? d.toLocaleDateString('id-ID') : '';
+        var timeStr = d ? d.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' }) : '';
         var itemsStr = '';
-        if (o.items) {
-            itemsStr = o.items.map(function(it) {
-                return it.name + (it.variant ? '(' + it.variant + ')' : '') + 'x' + it.qty + '(' + (it.status || 'dine') + ')';
-            }).join('; ');
-        }
-        var row = [
-            fmtDate(o.timestamp),
-            '"' + (o.meja || '') + '"',
-            '"' + (o.nama || '') + '"',
-            '"' + itemsStr + '"',
-            o.subtotal || 0,
-            o.takeawayFee || 0,
-            o.total || 0
-        ];
-        csv += row.join(',') + '\n';
+        if (o.items) o.items.forEach(function(it) { itemsStr += (it.name || it.menu || '') + ' x' + (it.qty || 1) + '; '; });
+        itemsStr = itemsStr.slice(0, -2).replace(/,/g, ' ').replace(/"/g, '""');
+        var name = (o.customerName || '').replace(/,/g, ' ').replace(/"/g, '""');
+        var pay = (o.paymentMethod || '').replace(/,/g, ' ');
+        csv += dateStr + ',' + timeStr + ',"' + name + '","' + itemsStr + '",' + (o.total || 0) + ',' + pay + '\n';
     });
 
     var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
     a.href = url;
-    a.download = 'bubur_grace_orders_' + new Date().toISOString().slice(0, 10) + '.csv';
+    a.download = 'laporan_bubur_grace_' + new Date().toISOString().slice(0, 10) + '.csv';
     a.click();
     URL.revokeObjectURL(url);
-    showToast('CSV berhasil didownload!');
+    showToast('File CSV berhasil diunduh');
+});
+
+/* ============================================
+   RESET STATS
+============================================ */
+document.getElementById('btnResetStats').addEventListener('click', function() {
+    if (!db) return;
+    if (!confirm('Reset omset hari ini dan bersihkan list order?')) return;
+    db.ref('bubur_grace/daily_stats').set({ total: 0, count: 0 });
+    db.ref('bubur_grace/orders').remove();
+    showToast('Data berhasil direset');
+});
+
+/* ============================================
+   RECEIPT MODAL
+============================================ */
+document.getElementById('btnCloseReceipt').addEventListener('click', function() {
+    document.getElementById('receiptModal').style.display = 'none';
+});
+document.getElementById('receiptModal').addEventListener('click', function(e) {
+    if (e.target === this) this.style.display = 'none';
 });
 </script>
 </body>
