@@ -274,7 +274,7 @@
             </div>
             <div class="override-card">
                 <div class="section-title"><i class="fa-solid fa-sliders" style="color:var(--primary);"></i> Override Darurat</div>
-                <p class="override-desc"><strong>Otomatis</strong> = status mengikuti jam operasional.<br><strong>Paksa Buka/Tutup</strong> = darurat, menimpa jadwal.</p>
+                <p class="override-desc"><strong>Otomatis</strong> = status mengikuti jam operasional.<br><strong>Paksa Buka/Tutup</strong> = darurat, menimpa jadwal. Saat <strong>Paksa Buka</strong> dipilih, switch kategori Nasi Uduk otomatis ikut dinyalakan.</p>
                 <div class="mode-options">
                     <div class="mode-opt" data-mode="auto"><div class="mode-ic ic-auto"><i class="fa-solid fa-robot"></i></div><div><h4>Otomatis</h4><span>Ikuti Jadwal</span></div></div>
                     <div class="mode-opt" data-mode="open"><div class="mode-ic ic-open"><i class="fa-solid fa-store"></i></div><div><h4>Paksa Buka</h4><span>Darurat</span></div></div>
@@ -310,7 +310,7 @@
         <div id="tab-weekend" class="tab-content" style="display:none;">
             <div class="cat-switch-card" id="weekendCatSwitchCard">
                 <div class="section-title"><i class="fa-solid fa-layer-group" style="color:var(--primary);"></i> Switch Kategori</div>
-                <p class="cat-switch-desc">Matikan switch = semua Nasi Uduk langsung tutup.</p>
+                <p class="cat-switch-desc">Matikan switch = semua Nasi Uduk langsung tutup. Switch ini akan otomatis menyala jika mode toko diubah ke "Paksa Buka" di tab Jam Operasional.</p>
                 <div class="cat-switch-grid" id="weekendCatSwitchGrid"></div>
             </div>
             <div class="info-card indigo">
@@ -344,6 +344,10 @@
 <script>
 /* ============================================
    MENU DATA
+   Catatan: kategori Mie dipecah menjadi
+   "Mie Kecil", "Mie Lebar", "Mie Yamin" agar
+   masing-masing bisa punya switch kategori
+   sendiri (sinkron dengan tampilan user).
 ============================================ */
 var menuItems = [
     {name:"Paket A (Bubur Biasa + Minuman)",category:"Paket",isWeekend:false},
@@ -358,18 +362,18 @@ var menuItems = [
     {name:"Extra Merah Telur Ayam Kampung",category:"Topping",isWeekend:false},
     {name:"Extra Ayam Rebus",category:"Topping",isWeekend:false},
     {name:"Extra Cakwe Iris",category:"Topping",isWeekend:false},
-    {name:"Mie Ayam Biasa (Kecil)",category:"Mie",isWeekend:false},
-    {name:"Mie Ayam Baso (Kecil)",category:"Mie",isWeekend:false},
-    {name:"Mie Ayam Pangsit Rebus (Kecil)",category:"Mie",isWeekend:false},
-    {name:"Mie Ayam Komplit (Kecil)",category:"Mie",isWeekend:false},
-    {name:"Mie Ayam Biasa (Lebar)",category:"Mie",isWeekend:false},
-    {name:"Mie Ayam Baso (Lebar)",category:"Mie",isWeekend:false},
-    {name:"Mie Ayam Pangsit Rebus (Lebar)",category:"Mie",isWeekend:false},
-    {name:"Mie Ayam Komplit (Lebar)",category:"Mie",isWeekend:false},
-    {name:"Mie Yamin Biasa",category:"Mie",isWeekend:false},
-    {name:"Mie Yamin Baso",category:"Mie",isWeekend:false},
-    {name:"Mie Yamin Pangsit Rebus",category:"Mie",isWeekend:false},
-    {name:"Mie Yamin Komplit",category:"Mie",isWeekend:false},
+    {name:"Mie Ayam Biasa (Kecil)",category:"Mie Kecil",isWeekend:false},
+    {name:"Mie Ayam Baso (Kecil)",category:"Mie Kecil",isWeekend:false},
+    {name:"Mie Ayam Pangsit Rebus (Kecil)",category:"Mie Kecil",isWeekend:false},
+    {name:"Mie Ayam Komplit (Kecil)",category:"Mie Kecil",isWeekend:false},
+    {name:"Mie Ayam Biasa (Lebar)",category:"Mie Lebar",isWeekend:false},
+    {name:"Mie Ayam Baso (Lebar)",category:"Mie Lebar",isWeekend:false},
+    {name:"Mie Ayam Pangsit Rebus (Lebar)",category:"Mie Lebar",isWeekend:false},
+    {name:"Mie Ayam Komplit (Lebar)",category:"Mie Lebar",isWeekend:false},
+    {name:"Mie Yamin Biasa",category:"Mie Yamin",isWeekend:false},
+    {name:"Mie Yamin Baso",category:"Mie Yamin",isWeekend:false},
+    {name:"Mie Yamin Pangsit Rebus",category:"Mie Yamin",isWeekend:false},
+    {name:"Mie Yamin Komplit",category:"Mie Yamin",isWeekend:false},
     {name:"Kwetiau Ayam Biasa",category:"Kwetiau",isWeekend:false},
     {name:"Kwetiau Baso",category:"Kwetiau",isWeekend:false},
     {name:"Kwetiau Pangsit Rebus",category:"Kwetiau",isWeekend:false},
@@ -434,12 +438,19 @@ var menuItems = [
 
 /* ============================================
    CATEGORY SWITCH CONFIG
+   Key HARUS sama persis dengan CAT_SWITCH_MAP
+   di file tampilan user (index.html), supaya
+   admin panel benar-benar tersambung.
 ============================================ */
 var CAT_SWITCH_CONFIG = [
-    { key:"bubur", label:"Bubur", sub:"Bubur Ayam, Topping", icon:"fa-bowl-food", categories:["Bubur","Topping"], tab:"daily" },
-    { key:"mie", label:"Mie", sub:"Kecil, Lebar, Yamin", icon:"fa-utensils", categories:["Mie"], tab:"daily" },
-    { key:"baso", label:"Baso", sub:"Baso & Pangsit", icon:"fa-circle-dot", categories:["Baso"], tab:"daily" },
-    { key:"nasiUduk", label:"Nasi Uduk", sub:"Menu Weekend", icon:"fa-plate-wheat", categories:["Nasi Uduk"], tab:"weekend" }
+    { key:"bubur",    label:"Bubur Ayam", sub:"Bubur Ayam & Topping (bukan Bubur Manis)", icon:"fa-bowl-food", categories:["Bubur","Topping"], tab:"daily" },
+    { key:"mieKecil", label:"Mie Kecil",  sub:"Mie Ayam Kecil",   icon:"fa-utensils",  categories:["Mie Kecil"], tab:"daily" },
+    { key:"mieLebar", label:"Mie Lebar",  sub:"Mie Ayam Lebar",   icon:"fa-utensils",  categories:["Mie Lebar"], tab:"daily" },
+    { key:"mieYamin", label:"Mie Yamin",  sub:"Mie Yamin",        icon:"fa-utensils",  categories:["Mie Yamin"], tab:"daily" },
+    { key:"kwetiau",  label:"Kwetiau",    sub:"Kwetiau Ayam",     icon:"fa-bowl-rice", categories:["Kwetiau"], tab:"daily" },
+    { key:"bihun",    label:"Bihun",      sub:"Bihun Ayam",       icon:"fa-bowl-rice", categories:["Bihun"], tab:"daily" },
+    { key:"baso",     label:"Baso",       sub:"Baso & Pangsit",   icon:"fa-circle-dot", categories:["Baso"], tab:"daily" },
+    { key:"nasiUduk", label:"Nasi Uduk",  sub:"Menu Weekend",     icon:"fa-plate-wheat", categories:["Nasi Uduk"], tab:"weekend" }
 ];
 
 /* ============================================
@@ -451,7 +462,7 @@ var storeMode = 'auto';
 var scheduleData = null;
 var stockData = {};
 var weekendStockData = {};
-var categorySwitches = { bubur: true, mie: true, baso: true, nasiUduk: true };
+var categorySwitches = { bubur: true, mieKecil: true, mieLebar: true, mieYamin: true, kwetiau: true, bihun: true, baso: true, nasiUduk: true };
 var allOrders = {};
 
 var DAYS = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
@@ -497,6 +508,36 @@ function parseTime(str) {
 function fmtDate(ts) {
     var d = new Date(ts);
     return d.toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' }) + ' ' + d.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' });
+}
+
+/* Kunci tanggal untuk statistik harian — HARUS identik dengan
+   cara tampilan user menyimpan (new Date().toISOString().slice(0,10)),
+   supaya admin panel membaca node yang benar. */
+function getTodayKey() {
+    return new Date().toISOString().slice(0, 10);
+}
+
+/* Label nama pemesan — data pesanan menyimpan field "meja" atau "nama",
+   BUKAN "customerName" (itu bug lama yang menyebabkan Dashboard selalu
+   menampilkan "Pelanggan" generik). */
+function getOrderLabel(o) {
+    if (o.meja) return 'Meja ' + o.meja;
+    if (o.nama) return o.nama;
+    return 'Pelanggan';
+}
+
+/* Label tipe pesanan dihitung dari status tiap item (dine/away),
+   menggantikan field "paymentMethod" lama yang sebenarnya tidak
+   pernah disimpan oleh tampilan user. */
+function getOrderModeLabel(o) {
+    if (!o.items || !o.items.length) return '-';
+    var hasDine = false, hasAway = false;
+    o.items.forEach(function(it) {
+        if (it.status === 'away') hasAway = true; else hasDine = true;
+    });
+    if (hasDine && hasAway) return 'Campur';
+    if (hasAway) return 'Bawa Pulang';
+    return 'Dine In';
 }
 
 /* ============================================
@@ -726,7 +767,10 @@ function startListeners() {
         renderWeekendStock();
     });
 
-    db.ref('bubur_grace/daily_stats').on('value', function(snapshot) {
+    /* FIX: statistik harian disimpan per-tanggal oleh tampilan user
+       (bubur_grace/daily_stats/{tanggal}), jadi admin harus mendengarkan
+       node tanggal hari ini, bukan seluruh node daily_stats. */
+    db.ref('bubur_grace/daily_stats/' + getTodayKey()).on('value', function(snapshot) {
         var d = snapshot.val();
         document.getElementById('statOmset').innerText = d ? fmtRp(d.total || 0) : 'Rp 0';
         document.getElementById('statOrders').innerText = d ? (d.count || 0) : '0';
@@ -921,7 +965,15 @@ document.querySelectorAll('.mode-opt').forEach(function(opt) {
     opt.addEventListener('click', function() {
         if (!db) return;
         var mode = this.getAttribute('data-mode');
-        db.ref('bubur_grace/status').set(mode).then(function() {
+        var updates = {};
+        updates['bubur_grace/status'] = mode;
+        if (mode === 'open') {
+            /* Saat Paksa Buka diaktifkan, otomatis nyalakan juga switch
+               kategori Nasi Uduk supaya stok Nasi Uduk langsung terbuka
+               tanpa perlu dinyalakan manual di tab Stok Weekend. */
+            updates['bubur_grace/categorySwitches/nasiUduk'] = true;
+        }
+        db.ref().update(updates).then(function() {
             showToast('Mode diubah: ' + (mode === 'auto' ? 'Otomatis' : mode === 'open' ? 'Paksa Buka' : 'Paksa Tutup'));
         });
     });
@@ -941,7 +993,7 @@ function renderDailyStock() {
     });
 
     var html = '';
-    var catOrder = ['Paket','Bubur','Topping','Mie','Kwetiau','Bihun','Baso','Sate','Bubur Manis','Dimsum','Gorengan','Jajanan','Kopi','Minuman'];
+    var catOrder = ['Paket','Bubur','Topping','Mie Kecil','Mie Lebar','Mie Yamin','Kwetiau','Bihun','Baso','Sate','Bubur Manis','Dimsum','Gorengan','Jajanan','Kopi','Minuman'];
     catOrder.forEach(function(cat) {
         if (!groups[cat]) return;
         html += '<div class="stock-category-group"><div class="category-label">' + cat + '</div>';
@@ -1040,7 +1092,7 @@ function refreshActivity() {
     entries.forEach(function(o) {
         var timeStr = o.timestamp ? fmtDate(o.timestamp) : '-';
         var totalStr = o.total ? fmtRp(o.total) : '-';
-        html += '<div class="activity-item"><strong>' + timeStr + '</strong> — ' + (o.customerName || 'Pelanggan') + ' <span style="float:right;color:var(--primary);font-weight:700;">' + totalStr + '</span></div>';
+        html += '<div class="activity-item"><strong>' + timeStr + '</strong> — ' + getOrderLabel(o) + ' <span style="float:right;color:var(--primary);font-weight:700;">' + totalStr + '</span></div>';
     });
     list.innerHTML = html;
 }
@@ -1091,9 +1143,9 @@ function renderHistory() {
             itemsStr = itemsStr.slice(0, -2);
         }
         html += '<div class="order-card">';
-        html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><strong style="font-size:.85rem;">' + (o.customerName || 'Pelanggan') + '</strong><span style="font-size:.75rem;color:#999;">' + timeStr + '</span></div>';
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><strong style="font-size:.85rem;">' + getOrderLabel(o) + '</strong><span style="font-size:.75rem;color:#999;">' + timeStr + '</span></div>';
         html += '<div style="font-size:.82rem;color:#555;margin-bottom:6px;">' + (itemsStr || '-') + '</div>';
-        html += '<div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:.75rem;color:#999;">' + (o.paymentMethod || '-') + '</span><strong style="color:var(--primary);font-size:.95rem;">' + totalStr + '</strong></div>';
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:.75rem;color:#999;">' + getOrderModeLabel(o) + '</span><strong style="color:var(--primary);font-size:.95rem;">' + totalStr + '</strong></div>';
         html += '</div>';
     });
     container.innerHTML = html;
@@ -1111,7 +1163,7 @@ document.getElementById('btnExport').addEventListener('click', function() {
     entries.sort(function(a, b) { return (a.timestamp || 0) - (b.timestamp || 0); });
     if (entries.length === 0) { showToast('Tidak ada data untuk diexport'); return; }
 
-    var csv = 'Tanggal,Waktu,Pelanggan,Menu,Total,Metode Pembayaran\n';
+    var csv = 'Tanggal,Waktu,Pelanggan,Menu,Total,Tipe Pesanan\n';
     entries.forEach(function(o) {
         var d = o.timestamp ? new Date(o.timestamp) : null;
         var dateStr = d ? d.toLocaleDateString('id-ID') : '';
@@ -1119,9 +1171,9 @@ document.getElementById('btnExport').addEventListener('click', function() {
         var itemsStr = '';
         if (o.items) o.items.forEach(function(it) { itemsStr += (it.name || it.menu || '') + ' x' + (it.qty || 1) + '; '; });
         itemsStr = itemsStr.slice(0, -2).replace(/,/g, ' ').replace(/"/g, '""');
-        var name = (o.customerName || '').replace(/,/g, ' ').replace(/"/g, '""');
-        var pay = (o.paymentMethod || '').replace(/,/g, ' ');
-        csv += dateStr + ',' + timeStr + ',"' + name + '","' + itemsStr + '",' + (o.total || 0) + ',' + pay + '\n';
+        var name = getOrderLabel(o).replace(/,/g, ' ').replace(/"/g, '""');
+        var mode = getOrderModeLabel(o).replace(/,/g, ' ');
+        csv += dateStr + ',' + timeStr + ',"' + name + '","' + itemsStr + '",' + (o.total || 0) + ',' + mode + '\n';
     });
 
     var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -1140,7 +1192,9 @@ document.getElementById('btnExport').addEventListener('click', function() {
 document.getElementById('btnResetStats').addEventListener('click', function() {
     if (!db) return;
     if (!confirm('Reset omset hari ini dan bersihkan list order?')) return;
-    db.ref('bubur_grace/daily_stats').set({ total: 0, count: 0 });
+    /* FIX: hanya reset statistik hari ini, bukan seluruh riwayat
+       daily_stats semua tanggal. */
+    db.ref('bubur_grace/daily_stats/' + getTodayKey()).set({ total: 0, count: 0 });
     db.ref('bubur_grace/orders').remove();
     showToast('Data berhasil direset');
 });
